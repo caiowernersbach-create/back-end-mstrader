@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -18,11 +16,32 @@ import { cn } from '@/lib/utils';
 import { tradeService, accountService, assetService, strategyService } from '../services';
 import { ArrowLeft, Save, X, Upload } from 'lucide-react';
 
+// TypeScript interfaces
+interface Account {
+  id: string;
+  accountName: string;
+  stopLossPerTrade: number;
+  dailyStopLimit: number;
+  currency: string;
+}
+
+interface Asset {
+  id: string;
+  assetSymbol: string;
+}
+
+interface Strategy {
+  id: string;
+  strategyName: string;
+}
+
+type TradeDirection = 'BUY' | 'SELL';
+
 interface TradeFormData {
   tradeDate: Date;
   accountId: string;
   assetId: string;
-  direction: 'BUY' | 'SELL';
+  direction: TradeDirection;
   resultValue: string;
   strategyId: string;
   emotion: string;
@@ -34,26 +53,14 @@ interface RiskAssessment {
   stopLossPerTrade: number;
   dailyStopLimit: number;
   tradeResult: number;
-  calculatedAt: string;
   isOutOfRisk: boolean;
+  calculatedAt: string;
 }
 
 const emotionOptions = [
-  'Confident',
-  'Excited',
-  'Anxious',
-  'Fearful',
-  'Greedy',
-  'Frustrated',
-  'Patient',
-  'Impatient',
-  'Focused',
-  'Distracted',
-  'Calm',
-  'Stressed',
-  'Optimistic',
-  'Pessimistic',
-  'Neutral'
+  'Confident', 'Excited', 'Anxious', 'Fearful', 'Greedy', 'Frustrated',
+  'Patient', 'Impatient', 'Focused', 'Distracted', 'Calm', 'Stressed',
+  'Optimistic', 'Pessimistic', 'Neutral'
 ];
 
 export function NewTrade() {
@@ -74,20 +81,20 @@ export function NewTrade() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // Fetch user accounts
-  const { data: accounts, isLoading: accountsLoading } = useQuery({
+  // Fetch user accounts with explicit typing
+  const { data: accounts, isLoading: accountsLoading } = useQuery<Account[]>({
     queryKey: ['accounts'],
-    queryFn: () => accountService.getUserAccounts(),
+    queryFn: accountService.getUserAccounts,
   });
 
-  // Fetch user strategies
-  const { data: strategies, isLoading: strategiesLoading } = useQuery({
+  // Fetch user strategies with explicit typing
+  const { data: strategies, isLoading: strategiesLoading } = useQuery<Strategy[]>({
     queryKey: ['strategies'],
-    queryFn: () => strategyService.getUserStrategies(),
+    queryFn: strategyService.getUserStrategies,
   });
 
-  // Fetch assets filtered by selected account
-  const { data: assets, isLoading: assetsLoading } = useQuery({
+  // Fetch assets filtered by selected account with explicit typing
+  const { data: assets, isLoading: assetsLoading } = useQuery<Asset[]>({
     queryKey: ['assets', formData.accountId],
     queryFn: () => formData.accountId ? assetService.getAssetsByAccount(formData.accountId) : Promise.resolve([]),
     enabled: !!formData.accountId,
@@ -95,8 +102,8 @@ export function NewTrade() {
 
   // Fetch account risk settings when account changes
   useEffect(() => {
-    if (formData.accountId) {
-      const account = accounts?.find(acc => acc.id === formData.accountId);
+    if (formData.accountId && accounts) {
+      const account = accounts.find(acc => acc.id === formData.accountId);
       if (account) {
         setRiskAssessment({
           stopLossPerTrade: account.stopLossPerTrade,
@@ -111,13 +118,13 @@ export function NewTrade() {
 
   // Check daily risk when form data changes
   useEffect(() => {
-    if (formData.accountId && formData.tradeDate && formData.resultValue) {
+    if (formData.accountId && formData.tradeDate && formData.resultValue && accounts) {
       checkDailyRisk();
     }
-  }, [formData.accountId, formData.tradeDate, formData.resultValue]);
+  }, [formData.accountId, formData.tradeDate, formData.resultValue, accounts]);
 
   const checkDailyRisk = async () => {
-    if (!formData.accountId || !formData.tradeDate || !formData.resultValue) return;
+    if (!formData.accountId || !formData.tradeDate || !formData.resultValue || !accounts) return;
 
     try {
       const resultValue = parseFloat(formData.resultValue);
@@ -129,7 +136,7 @@ export function NewTrade() {
       
       if (dailyRiskData && dailyRiskData.length > 0) {
         const dayData = dailyRiskData[0];
-        const account = accounts?.find(acc => acc.id === accountId);
+        const account = accounts.find(acc => acc.id === accountId);
         
         if (account && dayData.daily_result < -account.dailyStopLimit) {
           setDailyRiskAlert(`⚠️ Dia fora de risco: Resultado diário ${dayData.daily_result.toFixed(2)} excede limite de ${account.dailyStopLimit}`);
@@ -144,18 +151,20 @@ export function NewTrade() {
   };
 
   const updateRiskAssessment = () => {
-    if (!formData.accountId || !formData.resultValue || !riskAssessment) return;
+    if (!formData.accountId || !formData.resultValue || !riskAssessment || !accounts) return;
 
     const resultValue = parseFloat(formData.resultValue);
-    const stopLossPerTrade = riskAssessment.stopLossPerTrade;
+    const account = accounts.find(acc => acc.id === formData.accountId);
     
-    const isOutOfRisk = resultValue < -stopLossPerTrade;
-    
-    setRiskAssessment({
-      ...riskAssessment,
-      tradeResult: resultValue,
-      isOutOfRisk,
-    });
+    if (account) {
+      const isOutOfRisk = resultValue < -account.stopLossPerTrade;
+      
+      setRiskAssessment({
+        ...riskAssessment,
+        tradeResult: resultValue,
+        isOutOfRisk,
+      });
+    }
   };
 
   const handleInputChange = (field: keyof TradeFormData, value: string | Date | File) => {
@@ -203,6 +212,7 @@ export function NewTrade() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate required fields
     if (!formData.accountId || !formData.assetId || !formData.strategyId || !formData.emotion) {
       toast.error('Por favor, preencha todos os campos obrigatórios');
       return;
@@ -222,17 +232,26 @@ export function NewTrade() {
     setIsSubmitting(true);
 
     try {
+      // Calculate result type based on business rules
+      const resultType =
+        resultValue > 0 ? 'win' :
+        resultValue < 0 ? 'loss' :
+        'breakeven';
+
+      // Check if trade is out of risk
+      const isOutOfRisk = resultValue < -(riskAssessment?.stopLossPerTrade || 0);
+
       const tradeData = {
         ...formData,
         resultValue,
-        resultType: resultValue > 0 ? 'win' : resultValue < 0 ? 'loss' : 'breakeven',
-        tradeOutOfRisk: riskAssessment?.isOutOfRisk || false,
+        resultType,
+        tradeOutOfRisk: isOutOfRisk,
         riskAssessment: riskAssessment ? {
           calculatedAt: riskAssessment.calculatedAt,
           stopLossPerTrade: riskAssessment.stopLossPerTrade,
           dailyStopLimit: riskAssessment.dailyStopLimit,
           tradeResult: resultValue,
-          isOutOfRisk: riskAssessment.isOutOfRisk,
+          isOutOfRisk,
         } : null,
       };
 
@@ -245,16 +264,22 @@ export function NewTrade() {
   };
 
   const getRiskColor = () => {
-    if (!riskAssessment) return 'text-gray-400';
+    if (!riskAssessment || !formData.resultValue) return 'text-gray-400';
+    
+    const resultValue = parseFloat(formData.resultValue);
+    
+    if (resultValue === 0) return 'text-yellow-500';
     if (riskAssessment.isOutOfRisk) return 'text-red-500';
-    if (formData.resultValue === '0') return 'text-yellow-500';
     return 'text-green-500';
   };
 
   const getRiskText = () => {
-    if (!riskAssessment) return 'Aguardando dados...';
+    if (!riskAssessment || !formData.resultValue) return 'Aguardando dados...';
+    
+    const resultValue = parseFloat(formData.resultValue);
+    
+    if (resultValue === 0) return 'Breakeven';
     if (riskAssessment.isOutOfRisk) return 'Fora de Risco';
-    if (formData.resultValue === '0') return 'Breakeven';
     return 'Dentro do Risco';
   };
 
@@ -365,7 +390,7 @@ export function NewTrade() {
                     <Label htmlFor="direction" className="text-white">Direção</Label>
                     <Select
                       value={formData.direction}
-                      onValueChange={(value: 'BUY' | 'SELL') => handleInputChange('direction', value)}
+                      onValueChange={(value: TradeDirection) => handleInputChange('direction', value)}
                     >
                       <SelectTrigger className="bg-[#2A292B] border-gray-700 text-white">
                         <SelectValue />
@@ -521,7 +546,7 @@ export function NewTrade() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {riskAssessment ? (
+                  {riskAssessment && accounts ? (
                     <>
                       <div className="space-y-3">
                         <div className="flex justify-between">
@@ -538,8 +563,11 @@ export function NewTrade() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-400">Resultado:</span>
-                          <span className={`font-medium ${riskAssessment.tradeResult > 0 ? 'text-green-500' : riskAssessment.tradeResult < 0 ? 'text-red-500' : 'text-yellow-500'}`}>
-                            {riskAssessment.tradeResult.toFixed(2)}
+                          <span className={`font-medium ${formData.resultValue ? 
+                            (parseFloat(formData.resultValue) > 0 ? 'text-green-500' : 
+                             parseFloat(formData.resultValue) < 0 ? 'text-red-500' : 'text-yellow-500') : 
+                            'text-gray-400'}`}>
+                            {formData.resultValue ? parseFloat(formData.resultValue).toFixed(2) : '0.00'}
                           </span>
                         </div>
                         <div className="flex justify-between">
