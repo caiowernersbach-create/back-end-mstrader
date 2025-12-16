@@ -1,7 +1,4 @@
-import { PrismaClient } from '../prisma';
-
-const prisma = new PrismaClient();
-
+// Frontend API Abstraction - Mock Data
 export interface CreateStrategyDto {
   userId: string;
   strategyName: string;
@@ -24,119 +21,123 @@ export interface Strategy {
 }
 
 export class StrategyService {
+  // Mock data for testing
+  private mockStrategies = [
+    {
+      id: 'strategy-1',
+      userId: 'user-1',
+      strategyName: 'Trend Following',
+      description: 'Follow market trends with moving averages',
+      isActive: true,
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date('2024-01-15'),
+    },
+    {
+      id: 'strategy-2',
+      userId: 'user-1',
+      strategyName: 'Breakout',
+      description: 'Trade breakouts of key levels',
+      isActive: true,
+      createdAt: new Date('2024-01-05'),
+      updatedAt: new Date('2024-01-15'),
+    },
+    {
+      id: 'strategy-3',
+      userId: 'user-1',
+      strategyName: 'Mean Reversion',
+      description: 'Trade back to average prices',
+      isActive: true,
+      createdAt: new Date('2024-01-10'),
+      updatedAt: new Date('2024-01-15'),
+    },
+  ];
+
   async createStrategy(strategyData: CreateStrategyDto) {
-    try {
-      return prisma.strategy.create({
-        data: {
-          userId: strategyData.userId,
-          strategyName: strategyData.strategyName,
-          description: strategyData.description,
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const newStrategy = {
+          ...strategyData,
+          id: `strategy-${Date.now()}`,
           isActive: true,
-        },
-      });
-    } catch (error) {
-      console.error('Error creating strategy:', error);
-      throw new Error('Failed to create strategy');
-    }
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        this.mockStrategies.push(newStrategy);
+        resolve(newStrategy);
+      }, 500);
+    });
   }
 
   async getUserStrategies() {
-    try {
-      // In a real implementation, you would get the current user's ID
-      // For now, we'll return all active strategies
-      return prisma.strategy.findMany({
-        where: { isActive: true },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
-    } catch (error) {
-      console.error('Error fetching user strategies:', error);
-      throw new Error('Failed to fetch strategies');
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const activeStrategies = this.mockStrategies.filter(strategy => strategy.isActive);
+        resolve(activeStrategies);
+      }, 300);
+    });
   }
 
   async getStrategyById(id: string) {
-    try {
-      return prisma.strategy.findUnique({
-        where: { id },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-      });
-    } catch (error) {
-      console.error('Error fetching strategy:', error);
-      throw new Error('Failed to fetch strategy');
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const strategy = this.mockStrategies.find(strategy => strategy.id === id && strategy.isActive);
+        resolve(strategy || null);
+      }, 200);
+    });
   }
 
   async updateStrategy(id: string, strategyData: UpdateStrategyDto) {
-    try {
-      return prisma.strategy.update({
-        where: { id },
-        data: strategyData,
-      });
-    } catch (error) {
-      console.error('Error updating strategy:', error);
-      throw new Error('Failed to update strategy');
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const strategyIndex = this.mockStrategies.findIndex(strategy => strategy.id === id);
+        if (strategyIndex !== -1) {
+          this.mockStrategies[strategyIndex] = {
+            ...this.mockStrategies[strategyIndex],
+            ...strategyData,
+            updatedAt: new Date(),
+          };
+          resolve(this.mockStrategies[strategyIndex]);
+        } else {
+          resolve(null);
+        }
+      }, 400);
+    });
   }
 
   async deleteStrategy(id: string) {
-    try {
-      return prisma.strategy.update({
-        where: { id },
-        data: { isActive: false },
-      });
-    } catch (error) {
-      console.error('Error deleting strategy:', error);
-      throw new Error('Failed to delete strategy');
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const strategyIndex = this.mockStrategies.findIndex(strategy => strategy.id === id);
+        if (strategyIndex !== -1) {
+          this.mockStrategies[strategyIndex].isActive = false;
+          this.mockStrategies[strategyIndex].updatedAt = new Date();
+          resolve(this.mockStrategies[strategyIndex]);
+        } else {
+          resolve(null);
+        }
+      }, 300);
+    });
   }
 
   async getStrategyPerformance(strategyId: string, userId: string) {
-    try {
-      return prisma.$queryRaw`
-        SELECT 
-          COUNT(t.id)::INTEGER as total_trades,
-          COUNT(CASE WHEN t.result_type = 'win' THEN 1 END)::INTEGER as winning_trades,
-          COUNT(CASE WHEN t.result_type = 'loss' THEN 1 END)::INTEGER as losing_trades,
-          COUNT(CASE WHEN t.result_type = 'breakeven' THEN 1 END)::INTEGER as breakeven_trades,
-          CASE 
-            WHEN COUNT(t.id) = 0 THEN 0
-            ELSE (COUNT(CASE WHEN t.result_type = 'win' THEN 1 END)::DECIMAL / COUNT(t.id)) * 100
-          END as win_rate,
-          SUM(CASE WHEN t.result_type = 'win' THEN t.result_value ELSE 0 END)::DECIMAL as total_profit,
-          SUM(CASE WHEN t.result_type = 'loss' THEN ABS(t.result_value) ELSE 0 END)::DECIMAL as total_loss,
-          SUM(t.result_value)::DECIMAL as net_result,
-          CASE 
-            WHEN SUM(CASE WHEN t.result_type = 'loss' THEN ABS(t.result_value) ELSE 0 END) = 0 
-            THEN NULL 
-            ELSE SUM(CASE WHEN t.result_type = 'win' THEN t.result_value ELSE 0 END) / 
-                 SUM(CASE WHEN t.result_type = 'loss' THEN ABS(t.result_value) ELSE 0 END)
-          END as profit_factor
-        FROM trades t
-        WHERE t.strategy_id = ${strategyId} 
-          AND t.user_id = ${userId} 
-          AND t.is_active = true
-      `;
-    } catch (error) {
-      console.error('Error fetching strategy performance:', error);
-      throw new Error('Failed to fetch strategy performance');
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const mockPerformance = [
+          {
+            total_trades: 15,
+            winning_trades: 10,
+            losing_trades: 4,
+            breakeven_trades: 1,
+            win_rate: 66.67,
+            total_profit: 750.50,
+            total_loss: 225.25,
+            net_result: 525.25,
+            profit_factor: 3.33,
+          },
+        ];
+        resolve(mockPerformance);
+      }, 400);
+    });
   }
 }
 

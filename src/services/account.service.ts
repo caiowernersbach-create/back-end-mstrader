@@ -1,7 +1,4 @@
-import { PrismaClient } from '../prisma';
-
-const prisma = new PrismaClient();
-
+// Frontend API Abstraction - Mock Data
 export interface CreateAccountDto {
   userId: string;
   accountName: string;
@@ -33,126 +30,120 @@ export interface Account {
 }
 
 export class AccountService {
+  // Mock data for testing
+  private mockAccounts = [
+    {
+      id: 'account-1',
+      userId: 'user-1',
+      accountName: 'Main Account',
+      stopLossPerTrade: 100,
+      dailyStopLimit: 500,
+      currency: 'USD',
+      riskModel: {},
+      isActive: true,
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date('2024-01-15'),
+    },
+    {
+      id: 'account-2',
+      userId: 'user-1',
+      accountName: 'Secondary Account',
+      stopLossPerTrade: 50,
+      dailyStopLimit: 200,
+      currency: 'USD',
+      riskModel: {},
+      isActive: true,
+      createdAt: new Date('2024-01-10'),
+      updatedAt: new Date('2024-01-15'),
+    },
+  ];
+
   async createAccount(accountData: CreateAccountDto) {
-    try {
-      // Validate risk management fields
-      if (!accountData.stopLossPerTrade || accountData.stopLossPerTrade <= 0) {
-        throw new Error('Stop loss per trade must be a positive number');
-      }
-
-      if (!accountData.dailyStopLimit || accountData.dailyStopLimit <= 0) {
-        throw new Error('Daily stop limit must be a positive number');
-      }
-
-      return prisma.account.create({
-        data: {
-          userId: accountData.userId,
-          accountName: accountData.accountName,
-          stopLossPerTrade: accountData.stopLossPerTrade,
-          dailyStopLimit: accountData.dailyStopLimit,
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const newAccount = {
+          ...accountData,
+          id: `account-${Date.now()}`,
           currency: accountData.currency || 'USD',
           riskModel: accountData.riskModel || {},
           isActive: true,
-        },
-      });
-    } catch (error) {
-      console.error('Error creating account:', error);
-      throw new Error('Failed to create account');
-    }
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        this.mockAccounts.push(newAccount);
+        resolve(newAccount);
+      }, 500);
+    });
   }
 
   async getUserAccounts() {
-    try {
-      // In a real implementation, you would get the current user's ID
-      // For now, we'll return all active accounts
-      return prisma.account.findMany({
-        where: { isActive: true },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
-    } catch (error) {
-      console.error('Error fetching user accounts:', error);
-      throw new Error('Failed to fetch accounts');
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const activeAccounts = this.mockAccounts.filter(account => account.isActive);
+        resolve(activeAccounts);
+      }, 300);
+    });
   }
 
   async getAccountById(id: string) {
-    try {
-      return prisma.account.findUnique({
-        where: { id },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-      });
-    } catch (error) {
-      console.error('Error fetching account:', error);
-      throw new Error('Failed to fetch account');
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const account = this.mockAccounts.find(account => account.id === id && account.isActive);
+        resolve(account || null);
+      }, 200);
+    });
   }
 
   async updateAccount(id: string, accountData: UpdateAccountDto) {
-    try {
-      // Validate risk management fields if provided
-      if (accountData.stopLossPerTrade !== undefined && accountData.stopLossPerTrade <= 0) {
-        throw new Error('Stop loss per trade must be a positive number');
-      }
-
-      if (accountData.dailyStopLimit !== undefined && accountData.dailyStopLimit <= 0) {
-        throw new Error('Daily stop limit must be a positive number');
-      }
-
-      return prisma.account.update({
-        where: { id },
-        data: accountData,
-      });
-    } catch (error) {
-      console.error('Error updating account:', error);
-      throw new Error('Failed to update account');
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const accountIndex = this.mockAccounts.findIndex(account => account.id === id);
+        if (accountIndex !== -1) {
+          this.mockAccounts[accountIndex] = {
+            ...this.mockAccounts[accountIndex],
+            ...accountData,
+            updatedAt: new Date(),
+          };
+          resolve(this.mockAccounts[accountIndex]);
+        } else {
+          resolve(null);
+        }
+      }, 400);
+    });
   }
 
   async deleteAccount(id: string) {
-    try {
-      return prisma.account.update({
-        where: { id },
-        data: { isActive: false },
-      });
-    } catch (error) {
-      console.error('Error deleting account:', error);
-      throw new Error('Failed to delete account');
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const accountIndex = this.mockAccounts.findIndex(account => account.id === id);
+        if (accountIndex !== -1) {
+          this.mockAccounts[accountIndex].isActive = false;
+          this.mockAccounts[accountIndex].updatedAt = new Date();
+          resolve(this.mockAccounts[accountIndex]);
+        } else {
+          resolve(null);
+        }
+      }, 300);
+    });
   }
 
   async getAccountRiskSettings(id: string) {
-    try {
-      return prisma.account.findUnique({
-        where: { id },
-        select: {
-          id: true,
-          accountName: true,
-          stopLossPerTrade: true,
-          dailyStopLimit: true,
-          currency: true,
-        },
-      });
-    } catch (error) {
-      console.error('Error fetching account risk settings:', error);
-      throw new Error('Failed to fetch account risk settings');
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const account = this.mockAccounts.find(account => account.id === id && account.isActive);
+        if (account) {
+          resolve({
+            id: account.id,
+            accountName: account.accountName,
+            stopLossPerTrade: account.stopLossPerTrade,
+            dailyStopLimit: account.dailyStopLimit,
+            currency: account.currency,
+          });
+        } else {
+          resolve(null);
+        }
+      }, 200);
+    });
   }
 }
 

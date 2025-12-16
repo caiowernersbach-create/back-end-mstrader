@@ -1,7 +1,4 @@
-import { PrismaClient } from '../prisma';
-
-const prisma = new PrismaClient();
-
+// Frontend API Abstraction - Mock Data
 export interface CreateAssetDto {
   userId: string;
   assetSymbol: string;
@@ -24,110 +21,114 @@ export interface Asset {
 }
 
 export class AssetService {
+  // Mock data for testing
+  private mockAssets = [
+    {
+      id: 'asset-1',
+      userId: 'user-1',
+      assetSymbol: 'EURUSD',
+      marketType: 'forex',
+      isActive: true,
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date('2024-01-15'),
+    },
+    {
+      id: 'asset-2',
+      userId: 'user-1',
+      assetSymbol: 'GBPUSD',
+      marketType: 'forex',
+      isActive: true,
+      createdAt: new Date('2024-01-05'),
+      updatedAt: new Date('2024-01-15'),
+    },
+    {
+      id: 'asset-3',
+      userId: 'user-1',
+      assetSymbol: 'USDJPY',
+      marketType: 'forex',
+      isActive: true,
+      createdAt: new Date('2024-01-10'),
+      updatedAt: new Date('2024-01-15'),
+    },
+  ];
+
   async createAsset(assetData: CreateAssetDto) {
-    try {
-      return prisma.asset.create({
-        data: {
-          userId: assetData.userId,
-          assetSymbol: assetData.assetSymbol,
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const newAsset = {
+          ...assetData,
+          id: `asset-${Date.now()}`,
           marketType: assetData.marketType || 'forex',
           isActive: true,
-        },
-      });
-    } catch (error) {
-      console.error('Error creating asset:', error);
-      throw new Error('Failed to create asset');
-    }
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        this.mockAssets.push(newAsset);
+        resolve(newAsset);
+      }, 500);
+    });
   }
 
   async getUserAssets() {
-    try {
-      // In a real implementation, you would get the current user's ID
-      // For now, we'll return all active assets
-      return prisma.asset.findMany({
-        where: { isActive: true },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: { assetSymbol: 'asc' },
-      });
-    } catch (error) {
-      console.error('Error fetching user assets:', error);
-      throw new Error('Failed to fetch assets');
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const activeAssets = this.mockAssets.filter(asset => asset.isActive);
+        resolve(activeAssets);
+      }, 300);
+    });
   }
 
   async getAssetsByAccount(accountId: string) {
-    try {
-      // In a real implementation, you would get assets associated with the account
-      // For now, we'll return all active assets
-      return prisma.asset.findMany({
-        where: { isActive: true },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: { assetSymbol: 'asc' },
-      });
-    } catch (error) {
-      console.error('Error fetching assets by account:', error);
-      throw new Error('Failed to fetch assets');
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // For demo purposes, return all active assets
+        // In real implementation, this would filter by account
+        const activeAssets = this.mockAssets.filter(asset => asset.isActive);
+        resolve(activeAssets);
+      }, 300);
+    });
   }
 
   async getAssetById(id: string) {
-    try {
-      return prisma.asset.findUnique({
-        where: { id },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-      });
-    } catch (error) {
-      console.error('Error fetching asset:', error);
-      throw new Error('Failed to fetch asset');
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const asset = this.mockAssets.find(asset => asset.id === id && asset.isActive);
+        resolve(asset || null);
+      }, 200);
+    });
   }
 
   async updateAsset(id: string, assetData: UpdateAssetDto) {
-    try {
-      return prisma.asset.update({
-        where: { id },
-        data: assetData,
-      });
-    } catch (error) {
-      console.error('Error updating asset:', error);
-      throw new Error('Failed to update asset');
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const assetIndex = this.mockAssets.findIndex(asset => asset.id === id);
+        if (assetIndex !== -1) {
+          this.mockAssets[assetIndex] = {
+            ...this.mockAssets[assetIndex],
+            ...assetData,
+            updatedAt: new Date(),
+          };
+          resolve(this.mockAssets[assetIndex]);
+        } else {
+          resolve(null);
+        }
+      }, 400);
+    });
   }
 
   async deleteAsset(id: string) {
-    try {
-      return prisma.asset.update({
-        where: { id },
-        data: { isActive: false },
-      });
-    } catch (error) {
-      console.error('Error deleting asset:', error);
-      throw new Error('Failed to delete asset');
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const assetIndex = this.mockAssets.findIndex(asset => asset.id === id);
+        if (assetIndex !== -1) {
+          this.mockAssets[assetIndex].isActive = false;
+          this.mockAssets[assetIndex].updatedAt = new Date();
+          resolve(this.mockAssets[assetIndex]);
+        } else {
+          resolve(null);
+        }
+      }, 300);
+    });
   }
 }
 
