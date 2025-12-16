@@ -81,20 +81,20 @@ export function NewTrade() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // Fetch user accounts with explicit typing
-  const { data: accounts, isLoading: accountsLoading } = useQuery<Account[]>({
+  // Fetch user accounts with explicit typing and safe defaults
+  const { data: accounts = [], isLoading: accountsLoading } = useQuery<Account[]>({
     queryKey: ['accounts'],
     queryFn: accountService.getUserAccounts,
   });
 
-  // Fetch user strategies with explicit typing
-  const { data: strategies, isLoading: strategiesLoading } = useQuery<Strategy[]>({
+  // Fetch user strategies with explicit typing and safe defaults
+  const { data: strategies = [], isLoading: strategiesLoading } = useQuery<Strategy[]>({
     queryKey: ['strategies'],
     queryFn: strategyService.getUserStrategies,
   });
 
-  // Fetch assets filtered by selected account with explicit typing
-  const { data: assets, isLoading: assetsLoading } = useQuery<Asset[]>({
+  // Fetch assets filtered by selected account with explicit typing and safe defaults
+  const { data: assets = [], isLoading: assetsLoading } = useQuery<Asset[]>({
     queryKey: ['assets', formData.accountId],
     queryFn: () => formData.accountId ? assetService.getAssetsByAccount(formData.accountId) : Promise.resolve([]),
     enabled: !!formData.accountId,
@@ -102,7 +102,7 @@ export function NewTrade() {
 
   // Fetch account risk settings when account changes
   useEffect(() => {
-    if (formData.accountId && accounts) {
+    if (formData.accountId && accounts.length > 0) {
       const account = accounts.find(acc => acc.id === formData.accountId);
       if (account) {
         setRiskAssessment({
@@ -118,13 +118,13 @@ export function NewTrade() {
 
   // Check daily risk when form data changes
   useEffect(() => {
-    if (formData.accountId && formData.tradeDate && formData.resultValue && accounts) {
+    if (formData.accountId && formData.tradeDate && formData.resultValue && accounts.length > 0) {
       checkDailyRisk();
     }
   }, [formData.accountId, formData.tradeDate, formData.resultValue, accounts]);
 
   const checkDailyRisk = async () => {
-    if (!formData.accountId || !formData.tradeDate || !formData.resultValue || !accounts) return;
+    if (!formData.accountId || !formData.tradeDate || !formData.resultValue || accounts.length === 0) return;
 
     try {
       const resultValue = parseFloat(formData.resultValue);
@@ -151,7 +151,7 @@ export function NewTrade() {
   };
 
   const updateRiskAssessment = () => {
-    if (!formData.accountId || !formData.resultValue || !riskAssessment || !accounts) return;
+    if (!formData.accountId || !formData.resultValue || !riskAssessment || accounts.length === 0) return;
 
     const resultValue = parseFloat(formData.resultValue);
     const account = accounts.find(acc => acc.id === formData.accountId);
@@ -355,7 +355,7 @@ export function NewTrade() {
                           <SelectValue placeholder="Selecione uma conta" />
                         </SelectTrigger>
                         <SelectContent className="bg-[#1A191B] border-gray-800">
-                          {accounts?.map((account) => (
+                          {accounts.map((account) => (
                             <SelectItem key={account.id} value={account.id} className="text-white">
                               {account.accountName}
                             </SelectItem>
@@ -375,7 +375,7 @@ export function NewTrade() {
                           <SelectValue placeholder="Selecione um ativo" />
                         </SelectTrigger>
                         <SelectContent className="bg-[#1A191B] border-gray-800">
-                          {assets?.map((asset) => (
+                          {assets.map((asset) => (
                             <SelectItem key={asset.id} value={asset.id} className="text-white">
                               {asset.assetSymbol}
                             </SelectItem>
@@ -435,7 +435,7 @@ export function NewTrade() {
                         <SelectValue placeholder="Selecione uma estratégia" />
                       </SelectTrigger>
                       <SelectContent className="bg-[#1A191B] border-gray-800">
-                        {strategies?.map((strategy) => (
+                        {strategies.map((strategy) => (
                           <SelectItem key={strategy.id} value={strategy.id} className="text-white">
                             {strategy.strategyName}
                           </SelectItem>
@@ -546,7 +546,7 @@ export function NewTrade() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {riskAssessment && accounts ? (
+                  {riskAssessment && accounts.length > 0 ? (
                     <>
                       <div className="space-y-3">
                         <div className="flex justify-between">
