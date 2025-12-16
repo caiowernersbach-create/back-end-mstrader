@@ -15,7 +15,7 @@ import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { tradeService, accountService, assetService, strategyService } from '@/services';
+import { tradeService, accountService, assetService, strategyService } from '../services';
 import { ArrowLeft, Save, X, Upload } from 'lucide-react';
 
 interface TradeFormData {
