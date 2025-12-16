@@ -1,4 +1,16 @@
-// Frontend API Abstraction - Mock Data
+export interface Account {
+  id: string;
+  userId: string;
+  accountName: string;
+  stopLossPerTrade: number;
+  dailyStopLimit: number;
+  currency: string;
+  riskModel: any;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface CreateAccountDto {
   userId: string;
   accountName: string;
@@ -16,22 +28,16 @@ export interface UpdateAccountDto {
   riskModel?: any;
 }
 
-export interface Account {
+export interface AccountRiskSettings {
   id: string;
-  userId: string;
   accountName: string;
   stopLossPerTrade: number;
   dailyStopLimit: number;
   currency: string;
-  riskModel: any;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export class AccountService {
-  // Mock data for testing
-  private mockAccounts = [
+  private mockAccounts: Account[] = [
     {
       id: 'account-1',
       userId: 'user-1',
@@ -58,10 +64,10 @@ export class AccountService {
     },
   ];
 
-  async createAccount(accountData: CreateAccountDto) {
+  async createAccount(accountData: CreateAccountDto): Promise<Account> {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const newAccount = {
+        const newAccount: Account = {
           ...accountData,
           id: `account-${Date.now()}`,
           currency: accountData.currency || 'USD',
@@ -76,7 +82,7 @@ export class AccountService {
     });
   }
 
-  async getUserAccounts() {
+  async getUserAccounts(): Promise<Account[]> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const activeAccounts = this.mockAccounts.filter(account => account.isActive);
@@ -85,7 +91,7 @@ export class AccountService {
     });
   }
 
-  async getAccountById(id: string) {
+  async getAccountById(id: string): Promise<Account | null> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const account = this.mockAccounts.find(account => account.id === id && account.isActive);
@@ -94,7 +100,7 @@ export class AccountService {
     });
   }
 
-  async updateAccount(id: string, accountData: UpdateAccountDto) {
+  async updateAccount(id: string, accountData: UpdateAccountDto): Promise<Account | null> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const accountIndex = this.mockAccounts.findIndex(account => account.id === id);
@@ -112,7 +118,7 @@ export class AccountService {
     });
   }
 
-  async deleteAccount(id: string) {
+  async deleteAccount(id: string): Promise<Account | null> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const accountIndex = this.mockAccounts.findIndex(account => account.id === id);
@@ -127,7 +133,7 @@ export class AccountService {
     });
   }
 
-  async getAccountRiskSettings(id: string) {
+  async getAccountRiskSettings(id: string): Promise<AccountRiskSettings | null> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const account = this.mockAccounts.find(account => account.id === id && account.isActive);

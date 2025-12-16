@@ -1,4 +1,13 @@
-// Frontend API Abstraction - Mock Data
+export interface Asset {
+  id: string;
+  userId: string;
+  assetSymbol: string;
+  marketType: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface CreateAssetDto {
   userId: string;
   assetSymbol: string;
@@ -10,19 +19,8 @@ export interface UpdateAssetDto {
   marketType?: string;
 }
 
-export interface Asset {
-  id: string;
-  userId: string;
-  assetSymbol: string;
-  marketType: string;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export class AssetService {
-  // Mock data for testing
-  private mockAssets = [
+  private mockAssets: Asset[] = [
     {
       id: 'asset-1',
       userId: 'user-1',
@@ -52,10 +50,10 @@ export class AssetService {
     },
   ];
 
-  async createAsset(assetData: CreateAssetDto) {
+  async createAsset(assetData: CreateAssetDto): Promise<Asset> {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const newAsset = {
+        const newAsset: Asset = {
           ...assetData,
           id: `asset-${Date.now()}`,
           marketType: assetData.marketType || 'forex',
@@ -69,7 +67,7 @@ export class AssetService {
     });
   }
 
-  async getUserAssets() {
+  async getUserAssets(): Promise<Asset[]> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const activeAssets = this.mockAssets.filter(asset => asset.isActive);
@@ -78,7 +76,7 @@ export class AssetService {
     });
   }
 
-  async getAssetsByAccount(accountId: string) {
+  async getAssetsByAccount(accountId: string): Promise<Asset[]> {
     return new Promise((resolve) => {
       setTimeout(() => {
         // For demo purposes, return all active assets
@@ -89,7 +87,7 @@ export class AssetService {
     });
   }
 
-  async getAssetById(id: string) {
+  async getAssetById(id: string): Promise<Asset | null> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const asset = this.mockAssets.find(asset => asset.id === id && asset.isActive);
@@ -98,7 +96,7 @@ export class AssetService {
     });
   }
 
-  async updateAsset(id: string, assetData: UpdateAssetDto) {
+  async updateAsset(id: string, assetData: UpdateAssetDto): Promise<Asset | null> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const assetIndex = this.mockAssets.findIndex(asset => asset.id === id);
@@ -116,7 +114,7 @@ export class AssetService {
     });
   }
 
-  async deleteAsset(id: string) {
+  async deleteAsset(id: string): Promise<Asset | null> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const assetIndex = this.mockAssets.findIndex(asset => asset.id === id);

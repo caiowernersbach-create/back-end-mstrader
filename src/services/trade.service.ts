@@ -1,18 +1,31 @@
-// Frontend API Abstraction - Mock Data
-export interface CreateTradeDto {
+export type Direction = "BUY" | "SELL";
+
+export interface Trade {
+  id: string;
   userId: string;
   tradeDate: Date;
   accountId: string;
   assetId: string;
-  direction: 'BUY' | 'SELL';
+  direction: Direction;
   resultValue: number;
+  resultType: "win" | "loss" | "breakeven";
   strategyId: string;
   emotion: string;
   notes?: string;
-  tradeImage?: File;
-  resultType: 'win' | 'loss' | 'breakeven';
   tradeOutOfRisk: boolean;
-  riskAssessment?: any;
+  riskAssessment?: RiskAssessment;
+  is_active: boolean;
+  account: Account;
+  asset: Asset;
+  strategy: Strategy;
+}
+
+export interface RiskAssessment {
+  stopLossPerTrade: number;
+  dailyStopLimit: number;
+  tradeResult: number;
+  isOutOfRisk: boolean;
+  calculatedAt: string;
 }
 
 export interface DailyRiskData {
@@ -30,18 +43,33 @@ export interface DailyRiskData {
   account_name: string;
 }
 
+export interface CreateTradeDto {
+  userId: string;
+  tradeDate: Date;
+  accountId: string;
+  assetId: string;
+  direction: Direction;
+  resultValue: number;
+  strategyId: string;
+  emotion: string;
+  notes?: string;
+  tradeImage?: File;
+  resultType: "win" | "loss" | "breakeven";
+  tradeOutOfRisk: boolean;
+  riskAssessment?: RiskAssessment;
+}
+
 export class TradeService {
-  // Mock data for testing
-  private mockTrades = [
+  private mockTrades: Trade[] = [
     {
       id: '1',
       userId: 'user-1',
       tradeDate: new Date('2024-01-15'),
       accountId: 'account-1',
       assetId: 'asset-1',
-      direction: 'BUY' as const,
+      direction: 'BUY',
       resultValue: 150,
-      resultType: 'win' as const,
+      resultType: 'win',
       strategyId: 'strategy-1',
       emotion: 'Confident',
       notes: 'Good entry timing',
@@ -51,6 +79,7 @@ export class TradeService {
         dailyStopLimit: 500,
         tradeResult: 150,
         isOutOfRisk: false,
+        calculatedAt: new Date().toISOString(),
       },
       is_active: true,
       account: { id: 'account-1', accountName: 'Main Account', stopLossPerTrade: 100, dailyStopLimit: 500 },
@@ -63,9 +92,9 @@ export class TradeService {
       tradeDate: new Date('2024-01-14'),
       accountId: 'account-1',
       assetId: 'asset-2',
-      direction: 'SELL' as const,
+      direction: 'SELL',
       resultValue: -75,
-      resultType: 'loss' as const,
+      resultType: 'loss',
       strategyId: 'strategy-2',
       emotion: 'Anxious',
       notes: 'Exited too early',
@@ -75,6 +104,7 @@ export class TradeService {
         dailyStopLimit: 500,
         tradeResult: -75,
         isOutOfRisk: false,
+        calculatedAt: new Date().toISOString(),
       },
       is_active: true,
       account: { id: 'account-1', accountName: 'Main Account', stopLossPerTrade: 100, dailyStopLimit: 500 },
@@ -83,10 +113,10 @@ export class TradeService {
     },
   ];
 
-  async createTrade(tradeData: CreateTradeDto) {
+  async createTrade(tradeData: CreateTradeDto): Promise<Trade> {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const newTrade = {
+        const newTrade: Trade = {
           ...tradeData,
           id: `trade-${Date.now()}`,
           is_active: true,
@@ -96,11 +126,11 @@ export class TradeService {
         };
         this.mockTrades.push(newTrade);
         resolve(newTrade);
-      }, 500); // Simulate API delay
+      }, 500);
     });
   }
 
-  async getUserTrades(userId: string, filters?: any) {
+  async getUserTrades(userId: string, filters?: any): Promise<Trade[]> {
     return new Promise((resolve) => {
       setTimeout(() => {
         let filteredTrades = this.mockTrades.filter(trade => trade.userId === userId && trade.is_active);
@@ -126,7 +156,7 @@ export class TradeService {
     });
   }
 
-  async getTradeById(id: string) {
+  async getTradeById(id: string): Promise<Trade | null> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const trade = this.mockTrades.find(trade => trade.id === id && trade.is_active);
@@ -135,7 +165,7 @@ export class TradeService {
     });
   }
 
-  async updateTrade(id: string, tradeData: Partial<CreateTradeDto>) {
+  async updateTrade(id: string, tradeData: Partial<CreateTradeDto>): Promise<Trade | null> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const tradeIndex = this.mockTrades.findIndex(trade => trade.id === id);
@@ -149,7 +179,7 @@ export class TradeService {
     });
   }
 
-  async deleteTrade(id: string) {
+  async deleteTrade(id: string): Promise<Trade | null> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const tradeIndex = this.mockTrades.findIndex(trade => trade.id === id);
@@ -187,7 +217,7 @@ export class TradeService {
     });
   }
 
-  async getMonthlyRiskData(userId: string, year: number, month: number) {
+  async getMonthlyRiskData(userId: string, year: number, month: number): Promise<any[]> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const mockData = [
@@ -215,7 +245,7 @@ export class TradeService {
     });
   }
 
-  async getRiskDashboard(userId: string) {
+  async getRiskDashboard(userId: string): Promise<any[]> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const mockData = [

@@ -1,4 +1,13 @@
-// Frontend API Abstraction - Mock Data
+export interface Strategy {
+  id: string;
+  userId: string;
+  strategyName: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface CreateStrategyDto {
   userId: string;
   strategyName: string;
@@ -10,19 +19,20 @@ export interface UpdateStrategyDto {
   description?: string;
 }
 
-export interface Strategy {
-  id: string;
-  userId: string;
-  strategyName: string;
-  description?: string;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+export interface StrategyPerformance {
+  total_trades: number;
+  winning_trades: number;
+  losing_trades: number;
+  breakeven_trades: number;
+  win_rate: number;
+  total_profit: number;
+  total_loss: number;
+  net_result: number;
+  profit_factor: number;
 }
 
 export class StrategyService {
-  // Mock data for testing
-  private mockStrategies = [
+  private mockStrategies: Strategy[] = [
     {
       id: 'strategy-1',
       userId: 'user-1',
@@ -52,10 +62,10 @@ export class StrategyService {
     },
   ];
 
-  async createStrategy(strategyData: CreateStrategyDto) {
+  async createStrategy(strategyData: CreateStrategyDto): Promise<Strategy> {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const newStrategy = {
+        const newStrategy: Strategy = {
           ...strategyData,
           id: `strategy-${Date.now()}`,
           isActive: true,
@@ -68,7 +78,7 @@ export class StrategyService {
     });
   }
 
-  async getUserStrategies() {
+  async getUserStrategies(): Promise<Strategy[]> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const activeStrategies = this.mockStrategies.filter(strategy => strategy.isActive);
@@ -77,7 +87,7 @@ export class StrategyService {
     });
   }
 
-  async getStrategyById(id: string) {
+  async getStrategyById(id: string): Promise<Strategy | null> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const strategy = this.mockStrategies.find(strategy => strategy.id === id && strategy.isActive);
@@ -86,7 +96,7 @@ export class StrategyService {
     });
   }
 
-  async updateStrategy(id: string, strategyData: UpdateStrategyDto) {
+  async updateStrategy(id: string, strategyData: UpdateStrategyDto): Promise<Strategy | null> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const strategyIndex = this.mockStrategies.findIndex(strategy => strategy.id === id);
@@ -104,7 +114,7 @@ export class StrategyService {
     });
   }
 
-  async deleteStrategy(id: string) {
+  async deleteStrategy(id: string): Promise<Strategy | null> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const strategyIndex = this.mockStrategies.findIndex(strategy => strategy.id === id);
@@ -119,22 +129,20 @@ export class StrategyService {
     });
   }
 
-  async getStrategyPerformance(strategyId: string, userId: string) {
+  async getStrategyPerformance(strategyId: string, userId: string): Promise<StrategyPerformance> {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const mockPerformance = [
-          {
-            total_trades: 15,
-            winning_trades: 10,
-            losing_trades: 4,
-            breakeven_trades: 1,
-            win_rate: 66.67,
-            total_profit: 750.50,
-            total_loss: 225.25,
-            net_result: 525.25,
-            profit_factor: 3.33,
-          },
-        ];
+        const mockPerformance: StrategyPerformance = {
+          total_trades: 15,
+          winning_trades: 10,
+          losing_trades: 4,
+          breakeven_trades: 1,
+          win_rate: 66.67,
+          total_profit: 750.50,
+          total_loss: 225.25,
+          net_result: 525.25,
+          profit_factor: 3.33,
+        };
         resolve(mockPerformance);
       }, 400);
     });
