@@ -1,133 +1,19 @@
-export interface Asset {
+export type Asset = {
   id: string;
-  userId: string;
   assetSymbol: string;
-  marketType: string;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+};
 
-export interface CreateAssetDto {
-  userId: string;
-  assetSymbol: string;
-  marketType?: string;
-}
+const mockAssets: Asset[] = [
+  { id: "asset-1", assetSymbol: "EURUSD" },
+  { id: "asset-2", assetSymbol: "GBPUSD" },
+  { id: "asset-3", assetSymbol: "USDJPY" },
+  { id: "asset-4", assetSymbol: "AUDUSD" },
+  { id: "asset-5", assetSymbol: "USDCAD" }
+];
 
-export interface UpdateAssetDto {
-  assetSymbol?: string;
-  marketType?: string;
-}
-
-export class AssetService {
-  private mockAssets: Asset[] = [
-    {
-      id: 'asset-1',
-      userId: 'user-1',
-      assetSymbol: 'EURUSD',
-      marketType: 'forex',
-      isActive: true,
-      createdAt: new Date('2024-01-01'),
-      updatedAt: new Date('2024-01-15'),
-    },
-    {
-      id: 'asset-2',
-      userId: 'user-1',
-      assetSymbol: 'GBPUSD',
-      marketType: 'forex',
-      isActive: true,
-      createdAt: new Date('2024-01-05'),
-      updatedAt: new Date('2024-01-15'),
-    },
-    {
-      id: 'asset-3',
-      userId: 'user-1',
-      assetSymbol: 'USDJPY',
-      marketType: 'forex',
-      isActive: true,
-      createdAt: new Date('2024-01-10'),
-      updatedAt: new Date('2024-01-15'),
-    },
-  ];
-
-  async createAsset(assetData: CreateAssetDto): Promise<Asset> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newAsset: Asset = {
-          ...assetData,
-          id: `asset-${Date.now()}`,
-          marketType: assetData.marketType || 'forex',
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        this.mockAssets.push(newAsset);
-        resolve(newAsset);
-      }, 500);
-    });
-  }
-
-  async getUserAssets(): Promise<Asset[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const activeAssets = this.mockAssets.filter(asset => asset.isActive);
-        resolve(activeAssets);
-      }, 300);
-    });
-  }
-
+export const assetService = {
   async getAssetsByAccount(accountId: string): Promise<Asset[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // For demo purposes, return all active assets
-        // In real implementation, this would filter by account
-        const activeAssets = this.mockAssets.filter(asset => asset.isActive);
-        resolve(activeAssets);
-      }, 300);
-    });
+    // Always return assets, even if accountId is undefined
+    return Promise.resolve(mockAssets);
   }
-
-  async getAssetById(id: string): Promise<Asset | null> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const asset = this.mockAssets.find(asset => asset.id === id && asset.isActive);
-        resolve(asset || null);
-      }, 200);
-    });
-  }
-
-  async updateAsset(id: string, assetData: UpdateAssetDto): Promise<Asset | null> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const assetIndex = this.mockAssets.findIndex(asset => asset.id === id);
-        if (assetIndex !== -1) {
-          this.mockAssets[assetIndex] = {
-            ...this.mockAssets[assetIndex],
-            ...assetData,
-            updatedAt: new Date(),
-          };
-          resolve(this.mockAssets[assetIndex]);
-        } else {
-          resolve(null);
-        }
-      }, 400);
-    });
-  }
-
-  async deleteAsset(id: string): Promise<Asset | null> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const assetIndex = this.mockAssets.findIndex(asset => asset.id === id);
-        if (assetIndex !== -1) {
-          this.mockAssets[assetIndex].isActive = false;
-          this.mockAssets[assetIndex].updatedAt = new Date();
-          resolve(this.mockAssets[assetIndex]);
-        } else {
-          resolve(null);
-        }
-      }, 300);
-    });
-  }
-}
-
-export const assetService = new AssetService();
+};
