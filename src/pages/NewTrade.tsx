@@ -273,11 +273,10 @@ export function NewTrade() {
   };
 
   const getRiskText = () => {
-    if (!riskAssessment) return 'Aguardando dados...';
-    if (formData.resultValue === '0') return 'Breakeven';
-    if (riskAssessment.isOutOfRisk) return 'Fora de Risco';
-    return 'Dentro do Risco';
-  
+    if (!riskAssessment) return 'Waiting...';
+    if (Number(formData.resultValue) === 0) return 'Breakeven';
+    if (riskAssessment.isOutOfRisk) return 'Out of Risk';
+    return 'Within Risk';
   };
 
   return (
@@ -366,7 +365,7 @@ export function NewTrade() {
                       <Select
                         value={formData.assetId}
                         onValueChange={(value) => handleInputChange('assetId', value)}
-                        disabled={assetsLoading}
+                        disabled={!formData.accountId || assetsLoading}
                       >
                         <SelectTrigger className="bg-[#2A292B] border-gray-700 text-white">
                           <SelectValue placeholder="Selecione um ativo" />
