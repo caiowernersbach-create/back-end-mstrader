@@ -188,6 +188,7 @@ export function NewTrade() {
   const [dailyRiskAlert, setDailyRiskAlert] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string>('');
 
   // Fetch user accounts with defensive defaults
   const { data: accounts = [], isLoading: accountsLoading } = useQuery<Account[]>({
@@ -316,23 +317,50 @@ export function NewTrade() {
     },
   });
 
+  // Centralized validation function - runs only on Save Trade click
+  const validateForm = (): boolean => {
+    setValidationError(''); // Clear previous errors
+
+    // 1. Check required fields
+    const requiredFields = ['accountId', 'assetId', 'strategyId', 'emotion'];
+    const missingFields = requiredFields.filter(field => !formData[field as keyof TradeFormData]);
+    
+    if (missingFields.length > 0) {
+      setValidationError('Please fill in all required fields.');
+      return false;
+    }
+
+    // 2. Check trade date - cannot be in the future
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+    const tradeDate = new Date(formData.tradeDate);
+    tradeDate.setHours(0, 0, 0, 0); // Set to start of day for comparison
+
+    if (tradeDate > today) {
+      setValidationError('Trade date cannot be in the future.');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate required fields
-    if (!formData.accountId || !formData.assetId || !formData.strategyId || !formData.emotion) {
-      toast.error('Por favor, preencha todos os campos obrigatórios');
-      return;
+    // Run centralized validation
+    if (!validateForm()) {
+      return; // Stop submission if validation fails
     }
 
+    // Validate result value
     if (!formData.resultValue) {
-      toast.error('Por favor, informe o resultado da operação');
+      setValidationError('Please enter the trade result.');
       return;
     }
 
     const resultValue = parseFloat(formData.resultValue);
     if (isNaN(resultValue)) {
-      toast.error('Por favor, informe um valor numérico válido');
+      setValidationError('Please enter a valid numeric result.');
       return;
     }
 
@@ -400,6 +428,12 @@ export function NewTrade() {
     return 'shadow-[0_0_20px_rgba(2,172,115,0.2)]';
   };
 
+  // Add "Out Of Strategy" option to strategies list
+  const getStrategiesWithOutOfStrategy = () => {
+    const outOfStrategy = { id: 'out-of-strategy', strategyName: 'Out Of Strategy' };
+    return [outOfStrategy, ...(strategies || [])];
+  };
+
   return (
     <div className="min-h-screen bg-[#100E0F] text-white p-4">
       <div className="max-w-7xl mx-auto">
@@ -426,6 +460,14 @@ export function NewTrade() {
             </p>
           </div>
         </div>
+
+        {/* Validation Error Alert */}
+        {validationError && (
+          <Alert className="mb-6 bg-[#1F1E20] border-[rgba(239,68,68,0.3)] text-red-100 rounded-xl">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{validationError}</AlertDescription>
+          </Alert>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Main Content Grid */}
@@ -481,7 +523,7 @@ export function NewTrade() {
                           mode="single"
                           selected={formData.tradeDate}
                           onSelect={(date) => date && handleInputChange('tradeDate', date)}
-                          disabled={(date) => date < new Date('1900-01-01')}
+                          disabled={(date) => date > new Date()} // Block future dates
                           initialFocus
                           className="rounded-md bg-[#1A191B] text-white"
                         />
@@ -538,7 +580,7 @@ export function NewTrade() {
                         <SelectValue placeholder="Select strategy" />
                       </SelectTrigger>
                       <SelectContent className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
-                        {strategies.map((strategy) => (
+                        {getStrategiesWithOutOfStrategy().map((strategy) => (
                           <SelectItem key={strategy.id} value={strategy.id} className="text-white hover:bg-[#1F1E20] rounded-lg">
                             {strategy.strategyName}
                           </SelectItem>
