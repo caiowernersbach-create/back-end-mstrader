@@ -105,8 +105,8 @@ const RiskStatusChip = ({ status }: { status: 'within' | 'breakeven' | 'out' }) 
   );
 };
 
-// Asset Pill Component
-const AssetPill = ({ asset, isSelected, onClick, disabled }: { 
+// Asset Card Component
+const AssetCard = ({ asset, isSelected, onClick, disabled }: { 
   asset: Asset; 
   isSelected: boolean; 
   onClick: () => void; 
@@ -116,15 +116,20 @@ const AssetPill = ({ asset, isSelected, onClick, disabled }: {
     onClick={onClick}
     disabled={disabled}
     className={cn(
-      "relative px-4 py-3 rounded-xl border-2 transition-all duration-200",
-      "hover:scale-105 active:scale-95",
+      "relative p-4 rounded-xl border transition-all duration-200 cursor-pointer",
+      "hover:scale-[1.02] active:scale-[0.98]",
       disabled 
-        ? "opacity-50 cursor-not-allowed bg-[#1F1E20] border-gray-700" 
-        : "bg-[#151415] border-gray-800 hover:border-[#02AC73]/50",
-      isSelected && "border-[#02AC73] bg-[#02AC73]/5 shadow-lg shadow-[#02AC73]/20"
+        ? "opacity-50 cursor-not-allowed bg-[#1A191B] border-[#2A292B]" 
+        : "bg-[#1A191B] border-[#2A292B] hover:border-[rgba(2,172,115,0.4)] hover:bg-[#1F1E20]",
+      isSelected && "bg-[rgba(2,172,115,0.12)] border-[#02AC73] text-white shadow-[0_0_0_1px_rgba(2,172,115,0.6),0_0_12px_rgba(2,172,115,0.25)]"
     )}
   >
-    <span className="font-mono text-sm font-medium">{asset.assetSymbol}</span>
+    <span className={cn(
+      "font-medium text-sm uppercase tracking-wide",
+      isSelected ? "text-white" : "text-gray-300"
+    )}>
+      {asset.assetSymbol}
+    </span>
     {isSelected && (
       <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#02AC73] rounded-full border-2 border-[#100E0F]" />
     )}
@@ -144,7 +149,7 @@ const DirectionToggle = ({ direction, setDirection }: {
         "hover:scale-105 active:scale-95",
         direction === 'BUY' 
           ? "bg-[#02AC73]/10 border-[#02AC73] shadow-lg shadow-[#02AC73]/20 text-[#02AC73]" 
-          : "bg-[#151415] border-gray-800 hover:border-gray-600"
+          : "bg-[#1A191B] border-[#2A292B] hover:border-[#2A292B]"
       )}
     >
       <TrendingUp className="h-5 w-5" />
@@ -157,7 +162,7 @@ const DirectionToggle = ({ direction, setDirection }: {
         "hover:scale-105 active:scale-95",
         direction === 'SELL' 
           ? "bg-[#FF4D4F]/10 border-[#FF4D4F] shadow-lg shadow-[#FF4D4F]/20 text-[#FF4D4F]" 
-          : "bg-[#151415] border-gray-800 hover:border-gray-600"
+          : "bg-[#1A191B] border-[#2A292B] hover:border-[#2A292B]"
       )}
     >
       <TrendingDown className="h-5 w-5" />
@@ -405,7 +410,7 @@ export function NewTrade() {
               variant="ghost"
               size="sm"
               onClick={() => navigate('/dashboard')}
-              className="text-gray-400 hover:text-white hover:bg-[#151415] rounded-xl px-6 py-3 transition-all duration-200"
+              className="text-gray-400 hover:text-white hover:bg-[#1A191B] rounded-xl px-6 py-3 transition-all duration-200"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
@@ -428,7 +433,7 @@ export function NewTrade() {
             {/* Left Column - Main Form */}
             <div className="xl:col-span-3 space-y-8">
               {/* Trade Direction Card */}
-              <Card className="bg-[#151415] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
+              <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
                 <CardHeader className="pb-6">
                   <CardTitle className="text-2xl font-semibold text-white flex items-center gap-3">
                     <Target className="h-6 w-6 text-[#02AC73]" />
@@ -447,7 +452,7 @@ export function NewTrade() {
               </Card>
 
               {/* Trade Details Card */}
-              <Card className="bg-[#151415] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
+              <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
                 <CardHeader className="pb-6">
                   <CardTitle className="text-2xl font-semibold text-white flex items-center gap-3">
                     <CalendarIcon className="h-6 w-6 text-[#02AC73]" />
@@ -460,25 +465,25 @@ export function NewTrade() {
                 <CardContent className="space-y-6">
                   {/* Trade Date */}
                   <div className="space-y-2">
-                    <Label htmlFor="tradeDate" className="text-gray-300 font-medium">Trade Date</Label>
+                    <Label htmlFor="tradeDate" className="text-sm font-medium text-gray-300">Trade Date</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
-                          className="w-full justify-start bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#2A292B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200"
+                          className="w-full justify-start bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#3A393B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200"
                         >
                           <CalendarIcon className="h-4 w-4 mr-3" />
-                          <span className="text-lg">{format(formData.tradeDate, 'dd/MM/yyyy')}</span>
+                          <span className="text-base">{format(formData.tradeDate, 'dd/MM/yyyy')}</span>
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-[#151415] border-[rgba(255,255,255,0.06)] rounded-xl">
+                      <PopoverContent className="w-auto p-0 bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
                         <Calendar
                           mode="single"
                           selected={formData.tradeDate}
                           onSelect={(date) => date && handleInputChange('tradeDate', date)}
                           disabled={(date) => date < new Date('1900-01-01')}
                           initialFocus
-                          className="rounded-md bg-[#151415] text-white"
+                          className="rounded-md bg-[#1A191B] text-white"
                         />
                       </PopoverContent>
                     </Popover>
@@ -486,16 +491,16 @@ export function NewTrade() {
 
                   {/* Account Selector */}
                   <div className="space-y-2">
-                    <Label htmlFor="accountId" className="text-gray-300 font-medium">Account</Label>
+                    <Label htmlFor="accountId" className="text-sm font-medium text-gray-300">Account</Label>
                     <Select
                       value={formData.accountId}
                       onValueChange={(value) => handleInputChange('accountId', value)}
                       disabled={accountsLoading}
                     >
-                      <SelectTrigger className="bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#2A292B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
+                      <SelectTrigger className="bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#3A393B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
                         <SelectValue placeholder="Select account" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#151415] border-[rgba(255,255,255,0.06)] rounded-xl">
+                      <SelectContent className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
                         {accounts.map((account) => (
                           <SelectItem key={account.id} value={account.id} className="text-white hover:bg-[#1F1E20] rounded-lg">
                             {account.accountName}
@@ -507,10 +512,10 @@ export function NewTrade() {
 
                   {/* Asset Grid */}
                   <div className="space-y-2">
-                    <Label htmlFor="assetId" className="text-gray-300 font-medium">Asset</Label>
+                    <Label htmlFor="assetId" className="text-sm font-medium text-gray-300">Asset</Label>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                       {assets.map((asset) => (
-                        <AssetPill
+                        <AssetCard
                           key={asset.id}
                           asset={asset}
                           isSelected={formData.assetId === asset.id}
@@ -523,16 +528,16 @@ export function NewTrade() {
 
                   {/* Strategy Selector */}
                   <div className="space-y-2">
-                    <Label htmlFor="strategyId" className="text-gray-300 font-medium">Strategy</Label>
+                    <Label htmlFor="strategyId" className="text-sm font-medium text-gray-300">Strategy</Label>
                     <Select
                       value={formData.strategyId}
                       onValueChange={(value) => handleInputChange('strategyId', value)}
                       disabled={strategiesLoading}
                     >
-                      <SelectTrigger className="bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#2A292B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
+                      <SelectTrigger className="bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#3A393B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
                         <SelectValue placeholder="Select strategy" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#151415] border-[rgba(255,255,255,0.06)] rounded-xl">
+                      <SelectContent className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
                         {strategies.map((strategy) => (
                           <SelectItem key={strategy.id} value={strategy.id} className="text-white hover:bg-[#1F1E20] rounded-lg">
                             {strategy.strategyName}
@@ -544,7 +549,7 @@ export function NewTrade() {
 
                   {/* Result Input with Status */}
                   <div className="space-y-2">
-                    <Label htmlFor="resultValue" className="text-gray-300 font-medium">
+                    <Label htmlFor="resultValue" className="text-sm font-medium text-gray-300">
                       Result (P&L)
                     </Label>
                     <div className="flex gap-3 items-end">
@@ -555,7 +560,7 @@ export function NewTrade() {
                           value={formData.resultValue}
                           onChange={(e) => handleInputChange('resultValue', e.target.value)}
                           placeholder="0.00"
-                          className="bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white placeholder-gray-500 rounded-xl px-4 py-3 focus:border-[#02AC73] focus:shadow-[0_0_0_3px_rgba(2,172,115,0.15)] transition-all duration-200"
+                          className="bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white placeholder-gray-500 rounded-xl px-4 py-3 focus:border-[#02AC73] focus:shadow-[0_0_0_3px_rgba(2,172,115,0.15)] transition-all duration-200"
                         />
                       </div>
                       {formData.resultValue && (
@@ -574,15 +579,15 @@ export function NewTrade() {
 
                   {/* Emotion Selector */}
                   <div className="space-y-2">
-                    <Label htmlFor="emotion" className="text-gray-300 font-medium">Emotion</Label>
+                    <Label htmlFor="emotion" className="text-sm font-medium text-gray-300">Emotion</Label>
                     <Select
                       value={formData.emotion}
                       onValueChange={(value) => handleInputChange('emotion', value)}
                     >
-                      <SelectTrigger className="bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#2A292B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
+                      <SelectTrigger className="bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#3A393B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
                         <SelectValue placeholder="Select emotion" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#151415] border-[rgba(255,255,255,0.06)] rounded-xl">
+                      <SelectContent className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
                         {emotionOptions.map((emotion) => (
                           <SelectItem key={emotion} value={emotion} className="text-white hover:bg-[#1F1E20] rounded-lg">
                             <div className="flex items-center gap-2">
@@ -598,7 +603,7 @@ export function NewTrade() {
               </Card>
 
               {/* Notes Card */}
-              <Card className="bg-[#151415] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
+              <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
                 <CardHeader className="pb-6">
                   <CardTitle className="text-2xl font-semibold text-white flex items-center gap-3">
                     <Brain className="h-6 w-6 text-[#02AC73]" />
@@ -614,7 +619,7 @@ export function NewTrade() {
                     value={formData.notes}
                     onChange={(e) => handleInputChange('notes', e.target.value)}
                     placeholder="What worked? What failed? What can be improved?"
-                    className="bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white placeholder-gray-500 resize-none rounded-xl px-4 py-3 focus:border-[#02AC73] focus:shadow-[0_0_0_3px_rgba(2,172,115,0.15)] transition-all duration-200"
+                    className="bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white placeholder-gray-500 resize-none rounded-xl px-4 py-3 focus:border-[#02AC73] focus:shadow-[0_0_0_3px_rgba(2,172,115,0.15)] transition-all duration-200"
                     rows={4}
                   />
                 </CardContent>
@@ -624,7 +629,7 @@ export function NewTrade() {
             {/* Right Column - Risk Panel */}
             <div className="xl:col-span-1 space-y-6">
               {/* Risk Assessment Card */}
-              <Card className={`bg-[#151415] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl transition-all duration-300 ${getRiskGlow()}`}>
+              <Card className={`bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl transition-all duration-300 ${getRiskGlow()}`}>
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-semibold text-white flex items-center gap-2">
                     <Target className="h-5 w-5 text-[#02AC73]" />
@@ -639,21 +644,21 @@ export function NewTrade() {
                     <>
                       <div className="space-y-3">
                         <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
-                          <span className="text-gray-400 text-sm">Stop per Trade</span>
+                          <span className="text-sm text-gray-400">Stop per Trade</span>
                           <span className="text-white font-semibold">
                             {riskAssessment.stopLossPerTrade.toFixed(2)}
                             <span className="text-xs text-gray-500 ml-1">USD</span>
                           </span>
                         </div>
                         <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
-                          <span className="text-gray-400 text-sm">Daily Stop</span>
+                          <span className="text-sm text-gray-400">Daily Stop</span>
                           <span className="text-white font-semibold">
                             {riskAssessment.dailyStopLimit.toFixed(2)}
                             <span className="text-xs text-gray-500 ml-1">USD</span>
                           </span>
                         </div>
                         <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
-                          <span className="text-gray-400 text-sm">Trade Result</span>
+                          <span className="text-sm text-gray-400">Trade Result</span>
                           <span className={`font-semibold transition-colors duration-200 ${
                             formData.resultValue ? 
                               (parseFloat(formData.resultValue) > 0 ? 'text-green-400' : 
@@ -665,7 +670,7 @@ export function NewTrade() {
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-400 text-sm">Risk Status</span>
+                          <span className="text-sm text-gray-400">Risk Status</span>
                           <span className={`font-semibold text-sm ${
                             riskAssessment.isOutOfRisk ? 'text-red-400' : 'text-green-400'
                           }`}>
@@ -713,7 +718,7 @@ export function NewTrade() {
                   type="button"
                   variant="outline"
                   onClick={() => navigate('/dashboard')}
-                  className="w-full bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#2A292B] hover:border-[#02AC73]/50 rounded-xl px-8 py-4 text-lg font-semibold transition-all duration-200"
+                  className="w-full bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#3A393B] hover:border-[#02AC73]/50 rounded-xl px-8 py-4 text-lg font-semibold transition-all duration-200"
                 >
                   Cancel
                 </Button>
