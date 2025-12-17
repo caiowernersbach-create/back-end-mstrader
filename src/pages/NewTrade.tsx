@@ -14,7 +14,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { tradeService, accountService, assetService, strategyService } from '../services';
-import { ArrowLeft, Save, X, Upload } from 'lucide-react';
+import { ArrowLeft, Save, X, Upload, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 
 // TypeScript interfaces
 interface Account {
@@ -62,6 +62,48 @@ const emotionOptions = [
   'Patient', 'Impatient', 'Focused', 'Distracted', 'Calm', 'Stressed',
   'Optimistic', 'Pessimistic', 'Neutral'
 ];
+
+// Risk Status Component
+const RiskStatusChip = ({ status }: { status: 'within' | 'breakeven' | 'out' }) => {
+  const variants = {
+    within: {
+      bg: 'bg-green-500/10',
+      border: 'border-green-500/30',
+      text: 'text-green-400',
+      icon: CheckCircle,
+      label: 'Within Risk'
+    },
+    breakeven: {
+      bg: 'bg-yellow-500/10',
+      border: 'border-yellow-500/30',
+      text: 'text-yellow-400',
+      icon: AlertTriangle,
+      label: 'Breakeven'
+    },
+    out: {
+      bg: 'bg-red-500/10',
+      border: 'border-red-500/30',
+      text: 'text-red-400',
+      icon: XCircle,
+      label: 'Out of Risk'
+    }
+  };
+
+  const variant = variants[status];
+  const Icon = variant.icon;
+
+  return (
+    <div className={cn(
+      "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200",
+      variant.bg,
+      variant.border,
+      variant.text
+    )}>
+      <Icon className="h-3 w-3" />
+      {variant.label}
+    </div>
+  );
+};
 
 export function NewTrade() {
   const navigate = useNavigate();
@@ -262,70 +304,86 @@ export function NewTrade() {
     }
   };
 
-  const getRiskColor = () => {
-    if (!riskAssessment || !formData.resultValue) return 'text-gray-400';
+  const getRiskStatus = () => {
+    if (!formData.resultValue) return null;
     
     const resultValue = parseFloat(formData.resultValue);
     
-    if (resultValue === 0) return 'text-yellow-500';
-    if (riskAssessment.isOutOfRisk) return 'text-red-500';
-    return 'text-green-500';
+    if (resultValue === 0) return 'breakeven';
+    if (riskAssessment && riskAssessment.isOutOfRisk) return 'out';
+    return 'within';
   };
 
-  const getRiskText = () => {
-    if (!riskAssessment) return 'Aguardando dados...';
-    if (formData.resultValue === '0') return 'Breakeven';
-    if (riskAssessment.isOutOfRisk) return 'Fora de Risco';
-    return 'Dentro do Risco';
+  const getResultColor = () => {
+    if (!formData.resultValue) return 'text-gray-400';
+    
+    const resultValue = parseFloat(formData.resultValue);
+    
+    if (resultValue === 0) return 'text-yellow-400';
+    if (resultValue < 0) return 'text-red-400';
+    return 'text-green-400';
   };
 
   return (
     <div className="min-h-screen bg-[#100E0F] text-white p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center mb-8">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/dashboard')}
-            className="mr-4 text-gray-400 hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">Nova Operação</h1>
-            <p className="text-gray-400 mt-1">Registre sua operação com validação de risco automática</p>
+      <div className="max-w-6xl mx-auto">
+        {/* Premium Header */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="text-gray-400 hover:text-white hover:bg-[#1A191B] rounded-lg px-4 py-2 transition-all duration-200"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+          
+          <div className="text-center">
+            <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[#02AC73] to-[#02AC73]/60 bg-clip-text text-transparent">
+              New Trade
+            </h1>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Record your trade with automatic risk validation and professional analytics
+            </p>
+            
+            {/* Neon divider */}
+            <div className="w-24 h-0.5 bg-[#02AC73] mx-auto mt-6 rounded-full shadow-lg shadow-[#02AC73]/20" />
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Premium Main Content Grid */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
             {/* Left Column - Main Form */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Basic Information */}
-              <Card className="bg-[#1A191B] border-gray-800">
-                <CardHeader>
-                  <CardTitle className="text-white">Informações Básicas</CardTitle>
-                  <CardDescription className="text-gray-400">
-                    Dados essenciais da operação
+            <div className="xl:col-span-2 space-y-8">
+              {/* Premium Basic Information Card */}
+              <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:border-[#02AC73]/30">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-2xl font-semibold text-white flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#02AC73] rounded-full" />
+                    Trade Information
+                  </CardTitle>
+                  <CardDescription className="text-gray-400 text-base">
+                    Essential trade details and execution data
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   {/* Trade Date */}
                   <div className="space-y-2">
-                    <Label htmlFor="tradeDate" className="text-white">Data da Operação</Label>
+                    <Label htmlFor="tradeDate" className="text-gray-300 font-medium">Trade Date</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
-                          className="w-full justify-start bg-[#2A292B] border-gray-700 text-white hover:bg-[#3A393B]"
+                          className="w-full justify-start bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#2A292B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200"
                         >
-                          <span>{format(formData.tradeDate, 'dd/MM/yyyy')}</span>
+                          <span className="text-lg">{format(formData.tradeDate, 'dd/MM/yyyy')}</span>
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-[#1A191B] border-gray-800">
+                      <PopoverContent className="w-auto p-0 bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
                         <Calendar
                           mode="single"
                           selected={formData.tradeDate}
@@ -339,20 +397,20 @@ export function NewTrade() {
                   </div>
 
                   {/* Account and Asset */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="accountId" className="text-white">Conta</Label>
+                      <Label htmlFor="accountId" className="text-gray-300 font-medium">Account</Label>
                       <Select
                         value={formData.accountId}
                         onValueChange={(value) => handleInputChange('accountId', value)}
                         disabled={accountsLoading}
                       >
-                        <SelectTrigger className="bg-[#2A292B] border-gray-700 text-white">
-                          <SelectValue placeholder="Selecione uma conta" />
+                        <SelectTrigger className="bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#2A292B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
+                          <SelectValue placeholder="Select account" />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#1A191B] border-gray-800">
+                        <SelectContent className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
                           {accounts.map((account) => (
-                            <SelectItem key={account.id} value={account.id} className="text-white">
+                            <SelectItem key={account.id} value={account.id} className="text-white hover:bg-[#2A292B] rounded-lg">
                               {account.accountName}
                             </SelectItem>
                           ))}
@@ -361,18 +419,18 @@ export function NewTrade() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="assetId" className="text-white">Ativo</Label>
+                      <Label htmlFor="assetId" className="text-gray-300 font-medium">Asset</Label>
                       <Select
                         value={formData.assetId}
                         onValueChange={(value) => handleInputChange('assetId', value)}
                         disabled={assetsLoading}
                       >
-                        <SelectTrigger className="bg-[#2A292B] border-gray-700 text-white">
-                          <SelectValue placeholder="Selecione um ativo" />
+                        <SelectTrigger className="bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#2A292B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
+                          <SelectValue placeholder="Select asset" />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#1A191B] border-gray-800">
+                        <SelectContent className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
                           {assets.map((asset) => (
-                            <SelectItem key={asset.id} value={asset.id} className="text-white">
+                            <SelectItem key={asset.id} value={asset.id} className="text-white hover:bg-[#2A292B] rounded-lg">
                               {asset.assetSymbol}
                             </SelectItem>
                           ))}
@@ -383,56 +441,65 @@ export function NewTrade() {
 
                   {/* Direction */}
                   <div className="space-y-2">
-                    <Label htmlFor="direction" className="text-white">Direção</Label>
+                    <Label htmlFor="direction" className="text-gray-300 font-medium">Direction</Label>
                     <Select
                       value={formData.direction}
                       onValueChange={(value: TradeDirection) => handleInputChange('direction', value)}
                     >
-                      <SelectTrigger className="bg-[#2A292B] border-gray-700 text-white">
+                      <SelectTrigger className="bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#2A292B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#1A191B] border-gray-800">
-                        <SelectItem value="BUY" className="text-white">BUY</SelectItem>
-                        <SelectItem value="SELL" className="text-white">SELL</SelectItem>
+                      <SelectContent className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
+                        <SelectItem value="BUY" className="text-white hover:bg-[#2A292B] rounded-lg">BUY</SelectItem>
+                        <SelectItem value="SELL" className="text-white hover:bg-[#2A292B] rounded-lg">SELL</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {/* Result Value */}
+                  {/* Result Value with Status Chip */}
                   <div className="space-y-2">
-                    <Label htmlFor="resultValue" className="text-white">
-                      Resultado (P&L)
+                    <Label htmlFor="resultValue" className="text-gray-300 font-medium">
+                      Result (P&L)
                     </Label>
-                    <Input
-                      id="resultValue"
-                      type="number"
-                      value={formData.resultValue}
-                      onChange={(e) => handleInputChange('resultValue', e.target.value)}
-                      placeholder="0.00"
-                      className="bg-[#2A292B] border-gray-700 text-white placeholder-gray-500"
-                    />
+                    <div className="flex gap-3 items-end">
+                      <div className="flex-1">
+                        <Input
+                          id="resultValue"
+                          type="number"
+                          value={formData.resultValue}
+                          onChange={(e) => handleInputChange('resultValue', e.target.value)}
+                          placeholder="0.00"
+                          className="bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white placeholder-gray-500 rounded-xl px-4 py-3 focus:border-[#02AC73] focus:shadow-[0_0_0_3px_rgba(2,172,115,0.15)] transition-all duration-200"
+                        />
+                      </div>
+                      {formData.resultValue && (
+                        <div className="transition-all duration-200">
+                          {getRiskStatus() && <RiskStatusChip status={getRiskStatus() as any} />}
+                        </div>
+                      )}
+                    </div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-400">Status:</span>
-                      <span className={`text-sm font-medium ${getRiskColor()}`}>
-                        {getRiskText()}
+                      <span className="text-sm text-gray-500">Result:</span>
+                      <span className={`text-lg font-semibold transition-colors duration-200 ${getResultColor()}`}>
+                        {formData.resultValue ? parseFloat(formData.resultValue).toFixed(2) : '0.00'}
                       </span>
                     </div>
                   </div>
 
                   {/* Strategy */}
                   <div className="space-y-2">
-                    <Label htmlFor="strategyId" className="text-white">Estratégia</Label>
+                    <Label htmlFor="strategyId" className="text-gray-300 font-medium">Strategy</Label>
                     <Select
                       value={formData.strategyId}
                       onValueChange={(value) => handleInputChange('strategyId', value)}
                       disabled={strategiesLoading}
                     >
-                      <SelectTrigger className="bg-[#2A292B] border-gray-700 text-white">
-                        <SelectValue placeholder="Selecione uma estratégia" />
+                      <SelectTrigger className="bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#2A292B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
+                        <SelectValue placeholder="Select strategy" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#1A191B] border-gray-800">
+                      <SelectContent className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
                         {strategies.map((strategy) => (
-                          <SelectItem key={strategy.id} value={strategy.id} className="text-white">
+                          <SelectItem key={strategy.id} value={strategy.id} className="text-white hover:bg-[#2A292B] rounded-lg">
                             {strategy.strategyName}
                           </SelectItem>
                         ))}
@@ -442,17 +509,17 @@ export function NewTrade() {
 
                   {/* Emotion */}
                   <div className="space-y-2">
-                    <Label htmlFor="emotion" className="text-white">Emoção</Label>
+                    <Label htmlFor="emotion" className="text-gray-300 font-medium">Emotion</Label>
                     <Select
                       value={formData.emotion}
                       onValueChange={(value) => handleInputChange('emotion', value)}
                     >
-                      <SelectTrigger className="bg-[#2A292B] border-gray-700 text-white">
-                        <SelectValue placeholder="Selecione uma emoção" />
+                      <SelectTrigger className="bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#2A292B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
+                        <SelectValue placeholder="Select emotion" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#1A191B] border-gray-800">
+                      <SelectContent className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
                         {emotionOptions.map((emotion) => (
-                          <SelectItem key={emotion} value={emotion} className="text-white">
+                          <SelectItem key={emotion} value={emotion} className="text-white hover:bg-[#2A292B] rounded-lg">
                             {emotion}
                           </SelectItem>
                         ))}
@@ -462,31 +529,34 @@ export function NewTrade() {
                 </CardContent>
               </Card>
 
-              {/* Notes and Image */}
-              <Card className="bg-[#1A191B] border-gray-800">
-                <CardHeader>
-                  <CardTitle className="text-white">Observações e Imagem</CardTitle>
-                  <CardDescription className="text-gray-400">
-                    Detalhes adicionais da operação
+              {/* Premium Notes and Image Card */}
+              <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:border-[#02AC73]/30">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-2xl font-semibold text-white flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#02AC73] rounded-full" />
+                    Additional Details
+                  </CardTitle>
+                  <CardDescription className="text-gray-400 text-base">
+                    Trade notes and visual documentation
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   {/* Notes */}
                   <div className="space-y-2">
-                    <Label htmlFor="notes" className="text-white">Observações</Label>
+                    <Label htmlFor="notes" className="text-gray-300 font-medium">Notes</Label>
                     <Textarea
                       id="notes"
                       value={formData.notes}
                       onChange={(e) => handleInputChange('notes', e.target.value)}
-                      placeholder="Adicione observações sobre esta operação..."
-                      className="bg-[#2A292B] border-gray-700 text-white placeholder-gray-500 resize-none"
+                      placeholder="Add notes about this trade..."
+                      className="bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white placeholder-gray-500 resize-none rounded-xl px-4 py-3 focus:border-[#02AC73] focus:shadow-[0_0_0_3px_rgba(2,172,115,0.15)] transition-all duration-200"
                       rows={3}
                     />
                   </div>
 
                   {/* Image Upload */}
                   <div className="space-y-2">
-                    <Label htmlFor="tradeImage" className="text-white">Imagem (Opcional)</Label>
+                    <Label htmlFor="tradeImage" className="text-gray-300 font-medium">Trade Image (Optional)</Label>
                     <div className="flex items-center space-x-4">
                       <div className="flex-1">
                         <Input
@@ -500,10 +570,10 @@ export function NewTrade() {
                           type="button"
                           variant="outline"
                           onClick={() => document.getElementById('tradeImage')?.click()}
-                          className="bg-[#2A292B] border-gray-700 text-white hover:bg-[#3A393B]"
+                          className="bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#2A292B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200"
                         >
                           <Upload className="h-4 w-4 mr-2" />
-                          Upload Imagem
+                          Upload Image
                         </Button>
                       </div>
                       {imagePreview && (
@@ -511,18 +581,18 @@ export function NewTrade() {
                           type="button"
                           variant="outline"
                           onClick={removeImage}
-                          className="bg-[#2A292B] border-gray-700 text-white hover:bg-[#3A393B]"
+                          className="bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#2A292B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200"
                         >
                           <X className="h-4 w-4" />
                         </Button>
                       )}
                     </div>
                     {imagePreview && (
-                      <div className="mt-2">
+                      <div className="mt-4">
                         <img
                           src={imagePreview}
                           alt="Preview"
-                          className="w-20 h-20 object-cover rounded-md"
+                          className="w-24 h-24 object-cover rounded-xl border-[rgba(255,255,255,0.06)]"
                         />
                       </div>
                     )}
@@ -532,51 +602,63 @@ export function NewTrade() {
             </div>
 
             {/* Right Column - Risk Assessment */}
-            <div className="space-y-6">
-              {/* Risk Assessment */}
-              <Card className="bg-[#1A191B] border-gray-800">
-                <CardHeader>
-                  <CardTitle className="text-white">Avaliação de Risco</CardTitle>
-                  <CardDescription className="text-gray-400">
-                    Análise automática de risco
+            <div className="space-y-8">
+              {/* Premium Risk Assessment Card */}
+              <Card className={`bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl transition-all duration-300 ${
+                riskAssessment && accounts.length > 0 ? 'hover:border-[#02AC73]/30' : ''
+              }`}>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-2xl font-semibold text-white flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#02AC73] rounded-full" />
+                    Risk Assessment
+                  </CardTitle>
+                  <CardDescription className="text-gray-400 text-base">
+                    Automatic risk analysis and validation
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   {riskAssessment && accounts.length > 0 ? (
                     <>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Stop por Operação:</span>
-                          <span className="text-white font-medium">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
+                          <span className="text-gray-400">Stop per Trade</span>
+                          <span className="text-white font-semibold text-lg">
                             {riskAssessment.stopLossPerTrade.toFixed(2)}
+                            <span className="text-sm text-gray-500 ml-1">USD</span>
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Stop Diário:</span>
-                          <span className="text-white font-medium">
+                        <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
+                          <span className="text-gray-400">Daily Stop Limit</span>
+                          <span className="text-white font-semibold text-lg">
                             {riskAssessment.dailyStopLimit.toFixed(2)}
+                            <span className="text-sm text-gray-500 ml-1">USD</span>
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Resultado:</span>
-                          <span className={`font-medium ${formData.resultValue ? 
-                            (parseFloat(formData.resultValue) > 0 ? 'text-green-500' : 
-                             parseFloat(formData.resultValue) < 0 ? 'text-red-500' : 'text-yellow-500') : 
-                            'text-gray-400'}`}>
+                        <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
+                          <span className="text-gray-400">Trade Result</span>
+                          <span className={`font-semibold text-lg transition-colors duration-200 ${
+                            formData.resultValue ? 
+                              (parseFloat(formData.resultValue) > 0 ? 'text-green-400' : 
+                               parseFloat(formData.resultValue) < 0 ? 'text-red-400' : 'text-yellow-400') : 
+                              'text-gray-400'
+                          }`}>
                             {formData.resultValue ? parseFloat(formData.resultValue).toFixed(2) : '0.00'}
+                            <span className="text-sm text-gray-500 ml-1">USD</span>
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Status de Risco:</span>
-                          <span className={`font-medium ${riskAssessment.isOutOfRisk ? 'text-red-500' : 'text-green-500'}`}>
-                            {riskAssessment.isOutOfRisk ? 'Fora de Risco' : 'Dentro do Risco'}
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-400">Risk Status</span>
+                          <span className={`font-semibold text-lg ${
+                            riskAssessment.isOutOfRisk ? 'text-red-400' : 'text-green-400'
+                          }`}>
+                            {riskAssessment.isOutOfRisk ? 'Out of Risk' : 'Within Risk'}
                           </span>
                         </div>
                       </div>
                     </>
                   ) : (
                     <div className="text-center py-8">
-                      <div className="text-gray-400">Selecione uma conta para ver a avaliação de risco</div>
+                      <div className="text-gray-500">Select an account to view risk assessment</div>
                     </div>
                   )}
                 </CardContent>
@@ -584,28 +666,38 @@ export function NewTrade() {
 
               {/* Daily Risk Alert */}
               {dailyRiskAlert && (
-                <Alert className="bg-[#2A292B] border-yellow-600 text-yellow-100">
+                <Alert className="bg-[#1F1E20] border-[rgba(245,197,66,0.3)] text-yellow-100 rounded-xl">
+                  <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>{dailyRiskAlert}</AlertDescription>
                 </Alert>
               )}
 
-              {/* Action Buttons */}
-              <div className="space-y-3">
+              {/* Premium Action Buttons */}
+              <div className="space-y-4">
                 <Button
                   type="submit"
-                  className="w-full bg-[#02AC73] hover:bg-[#029B63] text-white font-medium"
                   disabled={isSubmitting}
+                  className="w-full bg-gradient-to-r from-[#02AC73] to-[#02AC73]/80 hover:from-[#02AC73] hover:to-[#02AC73] text-white font-semibold rounded-xl px-8 py-4 text-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(2,172,115,0.3)] hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  {isSubmitting ? 'Salvando...' : 'Salvar Operação'}
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                      Saving...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Save className="h-5 w-5" />
+                      Save Trade
+                    </div>
+                  )}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full bg-[#2A292B] border-gray-700 text-white hover:bg-[#3A393B]"
                   onClick={() => navigate('/dashboard')}
+                  className="w-full bg-[#1F1E20] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#2A292B] hover:border-[#02AC73]/50 rounded-xl px-8 py-4 text-lg font-semibold transition-all duration-200"
                 >
-                  Cancelar
+                  Cancel
                 </Button>
               </div>
             </div>
