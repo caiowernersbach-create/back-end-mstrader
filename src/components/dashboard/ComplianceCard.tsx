@@ -1,16 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Shield, TrendingUp, Target, Zap } from 'lucide-react';
-
-interface ComplianceCardProps {
-  riskManagement: number;
-  strategyAdherence: number;
-  entryQuality: number;
-  consistencyStreak: number;
-  isStreakActive: boolean;
-}
-
+ 
 export function ComplianceCard({ 
   riskManagement, 
   strategyAdherence, 
