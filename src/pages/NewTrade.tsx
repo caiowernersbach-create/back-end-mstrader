@@ -273,13 +273,11 @@ export function NewTrade() {
   };
 
   const getRiskText = () => {
-    if (!riskAssessment || !formData.resultValue) return 'Aguardando dados...';
-    
-    const resultValue = parseFloat(formData.resultValue);
-    
-    if (resultValue === 0) return 'Breakeven';
+    if (!riskAssessment) return 'Aguardando dados...';
+    if (formData.resultValue === '0') return 'Breakeven';
     if (riskAssessment.isOutOfRisk) return 'Fora de Risco';
-    dropdown should be enabled when assets are loaded
+    return 'Dentro do Risco';
+  
   };
 
   return (
