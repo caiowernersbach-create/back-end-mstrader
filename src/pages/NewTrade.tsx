@@ -273,10 +273,13 @@ export function NewTrade() {
   };
 
   const getRiskText = () => {
-    if (!riskAssessment) return 'Waiting...';
-    if (Number(formData.resultValue) === 0) return 'Breakeven';
-    if (riskAssessment.isOutOfRisk) return 'Out of Risk';
-    return 'Within Risk';
+    if (!riskAssessment || !formData.resultValue) return 'Aguardando dados...';
+    
+    const resultValue = parseFloat(formData.resultValue);
+    
+    if (resultValue === 0) return 'Breakeven';
+    if (riskAssessment.isOutOfRisk) return 'Fora de Risco';
+    dropdown should be enabled when assets are loaded
   };
 
   return (
@@ -365,7 +368,7 @@ export function NewTrade() {
                       <Select
                         value={formData.assetId}
                         onValueChange={(value) => handleInputChange('assetId', value)}
-                        disabled={!formData.accountId || assetsLoading}
+                        disabled={assetsLoading}
                       >
                         <SelectTrigger className="bg-[#2A292B] border-gray-700 text-white">
                           <SelectValue placeholder="Selecione um ativo" />
