@@ -83,7 +83,7 @@ export function ComplianceCard({
   ];
 
   return (
-    <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
+    <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 h-[420px]">
       <CardHeader>
         <CardTitle className="text-xl font-semibold text-white flex items-center gap-3">
           <Shield className="h-5 w-5 text-[#02AC73]" />
@@ -93,8 +93,7 @@ export function ComplianceCard({
           Track your trading discipline and consistency
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Progress bars */}
+      <CardContent className="h-[calc(100%-80px)] overflow-y-auto">
         {complianceItems.map((item, index) => (
           <div key={index} className="space-y-2">
             <div className="flex items-center justify-between">
@@ -116,7 +115,6 @@ export function ComplianceCard({
           </div>
         ))}
 
-        {/* Streak indicator */}
         <div className="pt-4 border-t border-[rgba(255,255,255,0.06)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -135,7 +133,6 @@ export function ComplianceCard({
           </div>
         </div>
 
-        {/* Overall score */}
         <div className="pt-4 border-t border-[rgba(255,255,255,0.06)]">
           <div className="text-center">
             <div className="text-sm text-gray-400 mb-1">Overall Compliance Score</div>

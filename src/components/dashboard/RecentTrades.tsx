@@ -12,8 +12,8 @@ interface Trade {
   resultValue: number;
   resultType: 'win' | 'loss' | 'breakeven';
   emotion: string;
-  strategy: { strategyName: string };
-  tradeOutOfRisk: boolean;
+  strategy: { strategyName: string; isOutOfStrategy?: boolean };
+  isOutOfRisk: boolean;
 }
 
 interface RecentTradesProps {
@@ -33,15 +33,16 @@ export function RecentTrades({ trades, onTradeClick }: RecentTradesProps) {
     return 'text-yellow-400';
   };
 
-  const getStrategyColor = (strategyName: string) => {
-    if (strategyName === 'Out Of Strategy') return 'bg-red-500/20 text-red-400 border-red-500/30';
+  const getStrategyColor = (strategyName: string, isOutOfStrategy?: boolean) => {
+    if (isOutOfStrategy) return 'bg-red-500/20 text-red-400 border-red-500/30';
     return 'bg-[#02AC73]/20 text-[#02AC73] border-[#02AC73]/30';
   };
 
-  const displayTrades = trades.slice(0, 5); // Show max 5 trades
+  // Show max 7 trades
+  const displayTrades = trades.slice(0, 7);
 
   return (
-    <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
+    <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 h-[420px]">
       <CardHeader>
         <CardTitle className="text-xl font-semibold text-white flex items-center gap-3">
           <Calendar className="h-5 w-5 text-[#02AC73]" />
@@ -51,7 +52,7 @@ export function RecentTrades({ trades, onTradeClick }: RecentTradesProps) {
           Your latest trading activity
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="h-[calc(100%-80px)] overflow-y-auto">
         <div className="space-y-3">
           {displayTrades.map((trade) => (
             <div 
@@ -61,7 +62,6 @@ export function RecentTrades({ trades, onTradeClick }: RecentTradesProps) {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  {/* Direction badge */}
                   <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
                     trade.direction === 'BUY' 
                       ? 'bg-[#02AC73]/10 text-[#02AC73] border border-[#02AC73]/30' 
@@ -71,7 +71,6 @@ export function RecentTrades({ trades, onTradeClick }: RecentTradesProps) {
                     <span className="font-semibold">{trade.direction}</span>
                   </div>
                   
-                  {/* Asset and date */}
                   <div>
                     <div className="text-sm font-medium text-white">
                       {trade.asset?.assetSymbol}
@@ -83,21 +82,18 @@ export function RecentTrades({ trades, onTradeClick }: RecentTradesProps) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                  {/* Result value */}
                   <div className={`text-lg font-semibold transition-colors duration-200 ${getResultColor(trade.resultValue)}`}>
                     {trade.resultValue.toFixed(2)}
                   </div>
 
-                  {/* Strategy badge */}
                   <Badge 
                     variant="outline" 
-                    className={`text-xs ${getStrategyColor(trade.strategy?.strategyName)}`}
+                    className={`text-xs ${getStrategyColor(trade.strategy.strategyName, trade.strategy.isOutOfStrategy)}`}
                   >
-                    {trade.strategy?.strategyName}
+                    {trade.strategy.strategyName}
                   </Badge>
 
-                  {/* Risk indicator */}
-                  {trade.tradeOutOfRisk && (
+                  {trade.isOutOfRisk && (
                     <div className="flex items-center gap-1 text-xs text-red-400">
                       <Minus className="h-3 w-3" />
                       <span>Risk</span>
@@ -106,7 +102,6 @@ export function RecentTrades({ trades, onTradeClick }: RecentTradesProps) {
                 </div>
               </div>
 
-              {/* Emotion (hidden on small screens, shown on hover) */}
               <div className="mt-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <span className="text-xs text-gray-500">Emotion:</span>
                 <Badge variant="secondary" className="text-xs">
@@ -122,8 +117,7 @@ export function RecentTrades({ trades, onTradeClick }: RecentTradesProps) {
             </div>
           )}
 
-          {/* View all button */}
-          {trades.length > 5 && (
+          {trades.length > 7 && (
             <div className="pt-4 border-t border-[rgba(255,255,255,0.06)]">
               <Button 
                 variant="outline" 

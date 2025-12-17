@@ -9,7 +9,7 @@ interface MonthlyCalendarProps {
     date: string;
     dailyResult: number;
     tradesCount: number;
-    day_out_of_risk: boolean;
+    isOutOfRisk: boolean;
   }>;
   currentDate: Date;
   onMonthChange: (direction: 'prev' | 'next') => void;
@@ -20,7 +20,7 @@ export function MonthlyCalendar({ dailyData, currentDate, onMonthChange }: Month
     date: string;
     dailyResult: number;
     tradesCount: number;
-    day_out_of_risk: boolean;
+    isOutOfRisk: boolean;
   } | null>(null);
 
   const monthNames = [
@@ -38,9 +38,9 @@ export function MonthlyCalendar({ dailyData, currentDate, onMonthChange }: Month
 
   const getDayStatus = (dayData: any) => {
     if (!dayData) return 'neutral';
-    if (dayData.day_out_of_risk) return 'out';
-    if (dayData.daily_result > 0) return 'positive';
-    if (dayData.daily_result < 0) return 'negative';
+    if (dayData.isOutOfRisk) return 'out';
+    if (dayData.dailyResult > 0) return 'positive';
+    if (dayData.dailyResult < 0) return 'negative';
     return 'neutral';
   };
 
@@ -85,7 +85,7 @@ export function MonthlyCalendar({ dailyData, currentDate, onMonthChange }: Month
     days.push(
       <div 
         key={day} 
-        className={`h-16 border rounded-lg p-2 transition-all duration-200 hover:scale-105 hover:shadow-lg cursor-pointer ${colorClass}`}
+        className={`h-16 border rounded-lg p-2 transition-all duration-200 hover:scale-[1.01] hover:shadow-lg cursor-pointer ${colorClass}`}
         onMouseEnter={() => dayData && setHoveredDay(dayData)}
         onMouseLeave={() => setHoveredDay(null)}
       >
@@ -95,7 +95,7 @@ export function MonthlyCalendar({ dailyData, currentDate, onMonthChange }: Month
             {Icon}
             {dayData && (
               <span className="text-xs font-semibold text-white">
-                {dayData.daily_result.toFixed(0)}
+                {dayData.dailyResult.toFixed(0)}
               </span>
             )}
           </div>
@@ -105,7 +105,7 @@ export function MonthlyCalendar({ dailyData, currentDate, onMonthChange }: Month
   }
 
   return (
-    <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
+    <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 h-[420px]">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -140,8 +140,7 @@ export function MonthlyCalendar({ dailyData, currentDate, onMonthChange }: Month
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        {/* Weekday headers */}
+      <CardContent className="h-[calc(100%-80px)]">
         <div className="grid grid-cols-7 gap-2 mb-2">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
             <div key={day} className="text-center text-xs font-medium text-gray-500 py-2">
@@ -150,12 +149,10 @@ export function MonthlyCalendar({ dailyData, currentDate, onMonthChange }: Month
           ))}
         </div>
         
-        {/* Calendar grid */}
         <div className="grid grid-cols-7 gap-2">
           {days}
         </div>
 
-        {/* Hover tooltip */}
         {hoveredDay && (
           <div className="absolute bg-[#1A191B] border border-[rgba(255,255,255,0.2)] rounded-lg p-3 shadow-xl z-10 backdrop-blur-sm mt-2">
             <div className="text-sm font-medium text-white mb-1">
@@ -163,16 +160,16 @@ export function MonthlyCalendar({ dailyData, currentDate, onMonthChange }: Month
             </div>
             <div className="flex items-center gap-2 text-xs">
               <Badge 
-                variant={hoveredDay.daily_result > 0 ? 'default' : hoveredDay.daily_result < 0 ? 'destructive' : 'secondary'}
+                variant={hoveredDay.dailyResult > 0 ? 'default' : hoveredDay.dailyResult < 0 ? 'destructive' : 'secondary'}
                 className="text-xs"
               >
-                {hoveredDay.daily_result.toFixed(2)}
+                {hoveredDay.dailyResult.toFixed(2)}
               </Badge>
               <span className="text-gray-400">
-                {hoveredDay.trades_count} trades
+                {hoveredDay.tradesCount} trades
               </span>
             </div>
-            {hoveredDay.day_out_of_risk && (
+            {hoveredDay.isOutOfRisk && (
               <div className="flex items-center gap-2 text-xs mt-1 text-red-400">
                 <AlertTriangle className="h-3 w-3" />
                 <span>Day out of risk</span>
@@ -181,7 +178,6 @@ export function MonthlyCalendar({ dailyData, currentDate, onMonthChange }: Month
           </div>
         )}
 
-        {/* Legend */}
         <div className="flex items-center justify-center gap-6 mt-6 pt-4 border-t border-[rgba(255,255,255,0.06)]">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-[#02AC73]/20 border border-[#02AC73] rounded"></div>

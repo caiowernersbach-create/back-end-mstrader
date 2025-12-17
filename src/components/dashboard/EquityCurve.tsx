@@ -25,7 +25,6 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
   const [animationProgress, setAnimationProgress] = useState(0);
 
   useEffect(() => {
-    // Animate the chart drawing
     const timer = setTimeout(() => {
       setAnimationProgress(1);
     }, 100);
@@ -34,7 +33,7 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
 
   if (!dailyData || dailyData.length === 0) {
     return (
-      <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl">
+      <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl h-[420px]">
         <CardHeader>
           <CardTitle className="text-xl font-semibold text-white flex items-center gap-3">
             <TrendingUp className="h-5 w-5 text-[#02AC73]" />
@@ -44,10 +43,8 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
             Monthly equity progression
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-64 flex items-center justify-center text-gray-500">
-            No trading data for this month
-          </div>
+        <CardContent className="h-[calc(100%-80px)] flex items-center justify-center text-gray-500">
+          No trading data for this month
         </CardContent>
       </Card>
     );
@@ -96,7 +93,7 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
   };
 
   return (
-    <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
+    <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 h-[420px]">
       <CardHeader>
         <CardTitle className="text-xl font-semibold text-white flex items-center gap-3">
           <TrendingUp className="h-5 w-5 text-[#02AC73]" />
@@ -106,10 +103,9 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
           Monthly equity progression
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="relative">
-          <svg width="100%" height={chartHeight} viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
-            {/* Grid lines */}
+      <CardContent className="h-[calc(100%-80px)]">
+        <div className="relative h-full">
+          <svg width="100%" height="100%" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
             <defs>
               <linearGradient id="equityGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#02AC73" stopOpacity="0.3" />
@@ -117,7 +113,6 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
               </linearGradient>
             </defs>
             
-            {/* Area fill */}
             {animationProgress > 0 && (
               <path
                 d={generateAreaPath()}
@@ -126,7 +121,6 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
               />
             )}
             
-            {/* Line */}
             {animationProgress > 0 && (
               <path
                 d={generatePath()}
@@ -139,7 +133,6 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
               />
             )}
             
-            {/* Data points */}
             {dailyData.map((point, index) => {
               const progress = Math.min(animationProgress * dailyData.length, index + 1) / dailyData.length;
               if (progress <= index / dailyData.length) return null;
@@ -171,7 +164,6 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
             })}
           </svg>
           
-          {/* Hover tooltip */}
           {hoveredPoint && (
             <div 
               className="absolute bg-[#1A191B] border border-[rgba(255,255,255,0.2)] rounded-lg p-3 shadow-xl z-10 backdrop-blur-sm"
@@ -205,7 +197,6 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
           )}
         </div>
         
-        {/* Summary stats */}
         <div className="flex justify-between mt-4 pt-4 border-t border-[rgba(255,255,255,0.06)]">
           <div className="text-center">
             <div className="text-sm text-gray-400">Start</div>

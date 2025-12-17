@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, DollarSign, Target, Calendar, Zap } from 'lucide-react';
 
 interface MonthlyKPIsProps {
@@ -78,9 +77,8 @@ export function MonthlyKPIs({
     hover:shadow-2xl 
     transition-all 
     duration-300 
-    hover:scale-105 
-    backdrop-blur-sm 
-    bg-opacity-80
+    hover:scale-[1.01] 
+    h-full
   `;
 
   return (

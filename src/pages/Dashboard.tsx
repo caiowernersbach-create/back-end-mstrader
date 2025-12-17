@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { tradeService } from '../services/trade.service';
+import { DashboardService } from '../services/dashboard.service';
+import { Trade, MonthlyMetrics, PerformanceStats } from '../types/dashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Calendar, TrendingUp } from 'lucide-react';
@@ -14,151 +16,24 @@ export function Dashboard() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch trades for the current month
-  const { data: trades = [], isLoading: tradesLoading } = useQuery({
-    queryKey: ['trades', currentDate],
+  // Fetch all trades
+  const { data: allTrades = [], isLoading: tradesLoading } = useQuery<Trade[]>({
+    queryKey: ['trades'],
     queryFn: () => tradeService.getUserTrades('user-1'),
   });
 
-  // Fetch risk dashboard data
-  const { data: riskData = [] } = useQuery({
-    queryKey: ['risk-dashboard'],
-    queryFn: () => tradeService.getRiskDashboard('user-1'),
-  });
-
-  // Calculate monthly metrics
-  const [monthlyMetrics, setMonthlyMetrics] = useState({
-    netResult: 0,
-    winRate: 0,
-    profitFactor: 0,
-    totalTrades: 0,
-    consistencyStreak: 0,
-    isStreakActive: false,
-    dailyData: [] as Array<{
-      date: string;
-      equity: number;
-      dailyResult: number;
-      tradesCount: number;
-    }>,
-    compliance: {
-      riskManagement: 0,
-      strategyAdherence: 0,
-      entryQuality: 0,
-    }
-  });
+  // Calculate monthly metrics using service
+  const monthlyMetrics = DashboardService.calculateMonthlyMetrics(allTrades, currentDate);
+  
+  // Get monthly trades for recent trades section
+  const monthlyTrades = DashboardService.getMonthlyTrades(allTrades, currentDate);
+  
+  // Calculate performance stats
+  const performanceStats = DashboardService.getPerformanceStats(monthlyMetrics.dailyAggregations);
 
   useEffect(() => {
-    if (trades.length > 0) {
-      calculateMonthlyMetrics();
-      setIsLoading(false);
-    }
-  }, [trades, currentDate]);
-
-  const calculateMonthlyMetrics = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    
-    // Filter trades for the current month
-    const monthlyTrades = trades.filter(trade => {
-      const tradeDate = new Date(trade.tradeDate);
-      return tradeDate.getFullYear() === year && tradeDate.getMonth() === month;
-    });
-
-    // Calculate basic metrics
-    const totalTrades = monthlyTrades.length;
-    const winningTrades = monthlyTrades.filter(trade => trade.resultType === 'win').length;
-    const losingTrades = monthlyTrades.filter(trade => trade.resultType === 'loss').length;
-    const breakevenTrades = monthlyTrades.filter(trade => trade.resultType === 'breakeven').length;
-    
-    const totalProfit = monthlyTrades
-      .filter(trade => trade.resultType === 'win')
-      .reduce((sum, trade) => sum + trade.resultValue, 0);
-    
-    const totalLoss = monthlyTrades
-      .filter(trade => trade.resultType === 'loss')
-      .reduce((sum, trade) => sum + Math.abs(trade.resultValue), 0);
-    
-    const netResult = totalProfit - totalLoss;
-    const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
-    const profitFactor = totalLoss > 0 ? totalProfit / totalLoss : 0;
-
-    // Calculate daily data for equity curve
-    const dailyDataMap = new Map();
-    let cumulativeEquity = 0;
-
-    monthlyTrades.forEach(trade => {
-      const date = new Date(trade.tradeDate).toISOString().split('T')[0];
-      if (!dailyDataMap.has(date)) {
-        dailyDataMap.set(date, {
-          date,
-          dailyResult: 0,
-          tradesCount: 0,
-          equity: 0
-        });
-      }
-      
-      const dayData = dailyDataMap.get(date);
-      dayData.dailyResult += trade.resultValue;
-      dayData.tradesCount += 1;
-    });
-
-    // Convert to array and calculate cumulative equity
-    const dailyDataArray = Array.from(dailyDataMap.values()).sort((a, b) => 
-      new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-
-    dailyDataArray.forEach(dayData => {
-      cumulativeEquity += dayData.dailyResult;
-      dayData.equity = cumulativeEquity;
-    });
-
-    // Calculate consistency streak (simplified - consecutive days with trades)
-    const streak = calculateConsistencyStreak(monthlyTrades, year, month);
-    
-    // Calculate compliance metrics (simplified for demo)
-    const compliance = {
-      riskManagement: Math.min(95, Math.floor(Math.random() * 30) + 70),
-      strategyAdherence: Math.min(95, Math.floor(Math.random() * 25) + 70),
-      entryQuality: Math.min(95, Math.floor(Math.random() * 20) + 70),
-    };
-
-    setMonthlyMetrics({
-      netResult,
-      winRate,
-      profitFactor,
-      totalTrades,
-      consistencyStreak: streak,
-      isStreakActive: streak > 0,
-      dailyData: dailyDataArray,
-      compliance
-    });
-  };
-
-  const calculateConsistencyStreak = (trades: any[], year: number, month: number) => {
-    if (trades.length === 0) return 0;
-
-    const tradeDates = trades.map(trade => 
-      new Date(trade.tradeDate).toISOString().split('T')[0]
-    ).sort();
-
-    let streak = 1;
-    let maxStreak = 1;
-
-    for (let i = 1; i < tradeDates.length; i++) {
-      const currentDate = new Date(tradeDates[i]);
-      const prevDate = new Date(tradeDates[i - 1]);
-      const daysDiff = (currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
-
-      if (daysDiff === 1) {
-        streak++;
-        maxStreak = Math.max(maxStreak, streak);
-      } else {
-        streak = 1;
-      }
-    }
-
-    return maxStreak;
-  };
+    setIsLoading(false);
+  }, [allTrades, currentDate]);
 
   const handleMonthChange = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
@@ -168,7 +43,6 @@ export function Dashboard() {
   };
 
   const handleTradeClick = (tradeId: string) => {
-    // Future implementation for trade details
     console.log('Navigate to trade details:', tradeId);
   };
 
@@ -188,8 +62,8 @@ export function Dashboard() {
   return (
     <div className="min-h-screen bg-[#100E0F] text-white p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-12">
+        {/* HEADER */}
+        <div className="w-full mb-12">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-[#02AC73] to-[#02AC73]/60 bg-clip-text text-transparent">
@@ -207,83 +81,138 @@ export function Dashboard() {
               <ArrowRight className="h-5 w-5 ml-2" />
             </Button>
           </div>
-        </div>
-
-        {/* Month Selector */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="flex items-center gap-4 bg-[#1A191B] border border-[rgba(255,255,255,0.06)] rounded-xl px-6 py-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleMonthChange('prev')}
-              className="text-gray-400 hover:text-white hover:bg-[#1F1E20] rounded-lg p-2"
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </Button>
-            <span className="text-lg font-semibold text-white min-w-[150px] text-center">
-              {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleMonthChange('next')}
-              className="text-gray-400 hover:text-white hover:bg-[#1F1E20] rounded-lg p-2"
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Button>
+          
+          {/* Month Selector */}
+          <div className="flex items-center justify-center">
+            <div className="flex items-center gap-4 bg-[#1A191B] border border-[rgba(255,255,255,0.06)] rounded-xl px-6 py-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleMonthChange('prev')}
+                className="text-gray-400 hover:text-white hover:bg-[#1F1E20] rounded-lg p-2"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </Button>
+              <span className="text-lg font-semibold text-white min-w-[150px] text-center">
+                {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleMonthChange('next')}
+                className="text-gray-400 hover:text-white hover:bg-[#1F1E20] rounded-lg p-2"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* KPI Cards */}
-        <MonthlyKPIs
-          netResult={monthlyMetrics.netResult}
-          winRate={monthlyMetrics.winRate}
-          profitFactor={monthlyMetrics.profitFactor}
-          totalTrades={monthlyMetrics.totalTrades}
-          consistencyStreak={monthlyMetrics.consistencyStreak}
-          isStreakActive={monthlyMetrics.isStreakActive}
-        />
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Equity Curve */}
-          <EquityCurve dailyData={monthlyMetrics.dailyData} />
-          
-          {/* Calendar */}
-          <MonthlyCalendar
-            dailyData={monthlyMetrics.dailyData.map(d => ({
-              date: d.date,
-              dailyResult: d.dailyResult,
-              tradesCount: d.tradesCount,
-              day_out_of_risk: d.dailyResult < -100 // Simplified risk check
-            }))}
-            currentDate={currentDate}
-            onMonthChange={handleMonthChange}
+        {/* KPI SECTION */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
+          <MonthlyKPIs
+            netResult={monthlyMetrics.netResult}
+            winRate={monthlyMetrics.winRate}
+            profitFactor={monthlyMetrics.profitFactor}
+            totalTrades={monthlyMetrics.totalTrades}
+            consistencyStreak={monthlyMetrics.consistencyStreak}
+            isStreakActive={monthlyMetrics.consistencyStreak > 0}
           />
         </div>
 
-        {/* Compliance Card */}
-        <ComplianceCard
-          riskManagement={monthlyMetrics.compliance.riskManagement}
-          strategyAdherence={monthlyMetrics.compliance.strategyAdherence}
-          entryQuality={monthlyMetrics.compliance.entryQuality}
-          consistencyStreak={monthlyMetrics.consistencyStreak}
-          isStreakActive={monthlyMetrics.isStreakActive}
-        />
+        {/* MAIN GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          {/* Equity Curve - Span 2 columns */}
+          <div className="lg:col-span-2">
+            <EquityCurve dailyData={monthlyMetrics.equityCurve} />
+          </div>
+          
+          {/* Compliance Card - Span 1 column */}
+          <div className="lg:col-span-1">
+            <ComplianceCard
+              riskManagement={monthlyMetrics.compliance.riskManagement}
+              strategyAdherence={monthlyMetrics.compliance.strategyAdherence}
+              entryQuality={monthlyMetrics.compliance.entryQuality}
+              consistencyStreak={monthlyMetrics.consistencyStreak}
+              isStreakActive={monthlyMetrics.consistencyStreak > 0}
+            />
+          </div>
+        </div>
 
-        {/* Recent Trades */}
-        <RecentTrades
-          trades={trades.filter(trade => {
-            const tradeDate = new Date(trade.tradeDate);
-            return tradeDate.getFullYear() === currentDate.getFullYear() && 
-                   tradeDate.getMonth() === currentDate.getMonth();
-          })}
-          onTradeClick={handleTradeClick}
-        />
+        {/* SECOND ROW (still main grid) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          {/* Calendar - Span 2 columns */}
+          <div className="lg:col-span-2">
+            <MonthlyCalendar
+              dailyData={monthlyMetrics.dailyAggregations}
+              currentDate={currentDate}
+              onMonthChange={handleMonthChange}
+            />
+          </div>
+          
+          {/* Empty spacer column - Span 1 column */}
+          <div className="lg:col-span-1">
+            {/* Reserved for future widgets */}
+          </div>
+        </div>
+
+        {/* BOTTOM GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Recent Trades - Span 2 columns */}
+          <div className="lg:col-span-2">
+            <RecentTrades
+              trades={monthlyTrades}
+              onTradeClick={handleTradeClick}
+            />
+          </div>
+          
+          {/* Performance Stats - Span 1 column */}
+          <div className="lg:col-span-1">
+            <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 h-full">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-white flex items-center gap-3">
+                  <TrendingUp className="h-5 w-5 text-[#02AC73]" />
+                  Performance Stats
+                </CardTitle>
+                <CardDescription className="text-gray-400 text-sm">
+                  Monthly trading statistics
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-[calc(100%-80px)] flex flex-col justify-center">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">Best Day</span>
+                    <span className="text-white font-semibold">
+                      {performanceStats.bestDay.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">Worst Day</span>
+                    <span className="text-white font-semibold">
+                      {performanceStats.worstDay.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">Avg Daily Result</span>
+                    <span className="text-white font-semibold">
+                      {performanceStats.avgDailyResult.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">Trading Days</span>
+                    <span className="text-white font-semibold">
+                      {performanceStats.tradingDays}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
