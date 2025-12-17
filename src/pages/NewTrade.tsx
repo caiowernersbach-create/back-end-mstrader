@@ -421,6 +421,7 @@ export function NewTrade() {
   const [dailyRiskAlert, setDailyRiskAlert] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   // Fetch user accounts with defensive defaults
   const { data: accounts = [], isLoading: accountsLoading } = useQuery<Account[]>({
@@ -538,25 +539,25 @@ export function NewTrade() {
 
   // Centralized validation function - runs only on Save Trade click
   const validateForm = (): boolean => {
-    setValidationError(''); // Clear previous errors
+    setValidationError(null); // Clear previous errors
 
-    // 1. Check required fields
+    // Check required fields
     const requiredFields = ['accountId', 'assetId', 'strategyId', 'emotion'];
     const missingFields = requiredFields.filter(field => !formData[field as keyof TradeFormData]);
     
     if (missingFields.length > 0) {
-      setValidationError('Please fill in all required fields.');
+      setValidationError("Please fill all required fields");
       return false;
     }
 
-    // 2. Check trade date - cannot be in the future
+    // Check trade date - cannot be in the future
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Set to start of day for comparison
     const tradeDate = new Date(formData.tradeDate);
     tradeDate.setHours(0, 0, 0, 0); // Set to start of day for comparison
 
     if (tradeDate > today) {
-      setValidationError('Trade date cannot be in the future.');
+      setValidationError("Trade date cannot be in the future");
       return false;
     }
 
@@ -573,13 +574,13 @@ export function NewTrade() {
 
     // Validate result value
     if (!formData.resultValue) {
-      setValidationError('Please enter the trade result.');
+      setValidationError("Please enter the trade result");
       return;
     }
 
     const resultValue = parseFloat(formData.resultValue);
     if (isNaN(resultValue)) {
-      setValidationError('Please enter a valid numeric result.');
+      setValidationError("Please enter a valid numeric result");
       return;
     }
 
@@ -612,6 +613,7 @@ export function NewTrade() {
       // Create trade and show summary
       const createdTrade = await createTradeMutation.mutateAsync(tradeData);
       setShowSummary(true);
+      setValidationError(null); // Clear validation error on successful save
     } catch (error) {
       console.error('Error creating trade:', error);
     } finally {
