@@ -81,23 +81,22 @@ export function NewTrade() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // Fetch user accounts with explicit typing and safe defaults
+  // Fetch user accounts with defensive defaults
   const { data: accounts = [], isLoading: accountsLoading } = useQuery<Account[]>({
     queryKey: ['accounts'],
     queryFn: accountService.getUserAccounts,
   });
 
-  // Fetch user strategies with explicit typing and safe defaults
+  // Fetch user strategies with defensive defaults
   const { data: strategies = [], isLoading: strategiesLoading } = useQuery<Strategy[]>({
     queryKey: ['strategies'],
     queryFn: strategyService.getUserStrategies,
   });
 
-  // Fetch assets filtered by selected account with explicit typing and safe defaults
+  // Fetch user assets (not account-specific) with defensive defaults
   const { data: assets = [], isLoading: assetsLoading } = useQuery<Asset[]>({
-    queryKey: ['assets', formData.accountId],
-    queryFn: () => formData.accountId ? assetService.getAssetsByAccount(formData.accountId) : Promise.resolve([]),
-    enabled: !!formData.accountId,
+    queryKey: ['assets'],
+    queryFn: assetService.getUserAssets,
   });
 
   // Fetch account risk settings when account changes
@@ -280,7 +279,7 @@ export function NewTrade() {
     
     if (resultValue === 0) return 'Breakeven';
     if (riskAssessment.isOutOfRisk) return 'Fora de Risco';
-    return 'Dentro do Risco';
+    dropdown should be enabled when assets are loaded
   };
 
   return (
@@ -369,7 +368,7 @@ export function NewTrade() {
                       <Select
                         value={formData.assetId}
                         onValueChange={(value) => handleInputChange('assetId', value)}
-                        disabled={assetsLoading || !formData.accountId}
+                        disabled={assetsLoading}
                       >
                         <SelectTrigger className="bg-[#2A292B] border-gray-700 text-white">
                           <SelectValue placeholder="Selecione um ativo" />

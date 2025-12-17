@@ -4,13 +4,15 @@ export type Asset = {
 };
 
 const mockAssets: Asset[] = [
-  { id: "ast-1", assetSymbol: "EURUSD" },
-  { id: "ast-2", assetSymbol: "NAS100" },
-  { id: "ast-3", assetSymbol: "SP500" }
+  { id: "asset-1", assetSymbol: "EURUSD" },
+  { id: "asset-2", assetSymbol: "GBPUSD" },
+  { id: "asset-3", assetSymbol: "USDJPY" },
+  { id: "asset-4", assetSymbol: "AUDUSD" },
+  { id: "asset-5", assetSymbol: "USDCAD" }
 ];
 
 export const assetService = {
-  async getAssetsByAccount(accountId: string): Promise<Asset[]> {
+  async getUserAssets(): Promise<Asset[]> {
     return Promise.resolve(mockAssets);
   }
 };
