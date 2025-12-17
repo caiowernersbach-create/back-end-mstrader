@@ -14,7 +14,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { tradeService, accountService, assetService, strategyService } from '../services';
-import { ArrowLeft, Save, X, Upload, CheckCircle, AlertTriangle, XCircle, TrendingUp, TrendingDown, Calendar as CalendarIcon, Target, Brain, Smile } from 'lucide-react';
+import { ArrowLeft, Save, X, Upload, CheckCircle, AlertTriangle, XCircle, TrendingUp, TrendingDown, Calendar as CalendarIcon, Target, Brain, Smile, Image as ImageIcon } from 'lucide-react';
 
 // TypeScript interfaces
 interface Account {
@@ -46,7 +46,7 @@ interface TradeFormData {
   strategyId: string;
   emotion: string;
   notes?: string;
-  tradeImage?: File;
+  tradeImages?: File[];
 }
 
 interface RiskAssessment {
@@ -62,6 +62,16 @@ const emotionOptions = [
   'Patient', 'Impatient', 'Focused', 'Distracted', 'Calm', 'Stressed',
   'Optimistic', 'Pessimistic', 'Neutral'
 ];
+
+// Emotion color mapping
+const getEmotionColor = (emotion: string): 'green' | 'yellow' | 'red' => {
+  const positiveEmotions = ['Confident', 'Excited', 'Patient', 'Focused', 'Calm', 'Optimistic'];
+  const negativeEmotions = ['Fearful', 'FOMO', 'Revenge', 'Overtrading', 'Anxious', 'Frustrated', 'Stressed', 'Impatient', 'Pessimistic'];
+  
+  if (positiveEmotions.includes(emotion)) return 'green';
+  if (negativeEmotions.includes(emotion)) return 'red';
+  return 'yellow';
+};
 
 // Risk Status Component
 const RiskStatusChip = ({ status }: { status: 'within' | 'breakeven' | 'out' }) => {
@@ -171,6 +181,228 @@ const DirectionToggle = ({ direction, setDirection }: {
   </div>
 );
 
+// Strategy Item Component with Out of Strategy styling
+const StrategyItem = ({ strategy, isSelected, onClick, disabled }: { 
+  strategy: Strategy; 
+  isSelected: boolean; 
+  onClick: () => void; 
+  disabled: boolean;
+}) => {
+  const isOutOfStrategy = strategy.strategyName === 'Out Of Strategy';
+  
+  return (
+    <SelectItem 
+      value={strategy.id} 
+      className={cn(
+        "text-white hover:bg-[#1F1E20] rounded-lg transition-all duration-200",
+        isOutOfStrategy && "bg-[#7F1D1D] border border-[#DC2626] text-red-100 hover:bg-[#991B1B]",
+        isSelected && isOutOfStrategy && "bg-[#991B1B] border border-[#DC2626] text-white shadow-[0_0_0_1px_rgba(220,38,38,0.6),0_0_12px_rgba(220,38,38,0.25)]"
+      )}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      <div className="flex items-center gap-2">
+        {isOutOfStrategy && (
+          <AlertTriangle className="h-4 w-4 text-red-400" />
+        )}
+        {strategy.strategyName}
+      </div>
+    </SelectItem>
+  );
+};
+
+// Image Upload Component
+const ImageUpload = ({ onImagesChange }: { onImagesChange: (images: File[]) => void }) => {
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      const newPreviews: string[] = [];
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          newPreviews.push(e.target?.result as string);
+          if (newPreviews.length === files.length) {
+            setImagePreviews(prev => [...prev, ...newPreviews]);
+            onImagesChange(files);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    onImagesChange(imagePreviews.filter((_, i) => i !== index).map((_, i) => imagePreviews[i]));
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <ImageIcon className="h-4 w-4 text-gray-400" />
+        <span className="text-sm text-gray-300">Trade Images</span>
+      </div>
+      
+      <div className="flex items-center gap-3">
+        <label className="flex-1">
+          <div className="flex items-center justify-center w-full h-32 border-2 border-dashed border-[#2A292B] rounded-xl cursor-pointer hover:border-[#02AC73]/50 transition-colors duration-200">
+            <div className="text-center">
+              <Upload className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+              <span className="text-sm text-gray-400">Click to upload images</span>
+            </div>
+          </div>
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+            id="image-upload"
+          />
+        </label>
+      </div>
+
+      {imagePreviews.length > 0 && (
+        <div className="grid grid-cols-3 gap-2">
+          {imagePreviews.map((preview, index) => (
+            <div key={index} className="relative group">
+              <img 
+                src={preview} 
+                alt={`Trade image ${index + 1}`}
+                className="w-full h-20 object-cover rounded-lg"
+              />
+              <button
+                onClick={() => removeImage(index)}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Trade Summary Card Component
+const TradeSummaryCard = ({ trade }: { trade: any }) => {
+  const isOutOfStrategy = trade.strategy?.strategyName === 'Out Of Strategy';
+  const emotionColor = getEmotionColor(trade.emotion);
+
+  const getEmotionColorClass = (color: string) => {
+    switch (color) {
+      case 'green': return 'text-green-400';
+      case 'red': return 'text-red-400';
+      case 'yellow': return 'text-yellow-400';
+      default: return 'text-gray-400';
+    }
+  };
+
+  const getEmotionGlow = (color: string) => {
+    switch (color) {
+      case 'green': return 'shadow-[0_0_8px_rgba(2,172,115,0.2)]';
+      case 'red': return 'shadow-[0_0_8px_rgba(239,68,68,0.2)]';
+      case 'yellow': return 'shadow-[0_0_8px_rgba(245,197,66,0.2)]';
+      default: return '';
+    }
+  };
+
+  return (
+    <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-xl font-semibold text-white flex items-center gap-2">
+          <Target className="h-5 w-5 text-[#02AC73]" />
+          Trade Summary
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-3">
+          <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
+            <span className="text-sm text-gray-400">Strategy</span>
+            <span className={cn(
+              "font-semibold text-sm",
+              isOutOfStrategy ? "text-red-400" : "text-green-400"
+            )}>
+              {trade.strategy?.strategyName || 'N/A'}
+            </span>
+          </div>
+          
+          <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
+            <span className="text-sm text-gray-400">Emotion</span>
+            <span className={cn(
+              "font-semibold text-sm",
+              getEmotionColorClass(emotionColor),
+              getEmotionGlow(emotionColor)
+            )}>
+              {trade.emotion || 'N/A'}
+            </span>
+          </div>
+          
+          <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
+            <span className="text-sm text-gray-400">Asset</span>
+            <span className="text-white font-semibold">
+              {trade.asset?.assetSymbol || 'N/A'}
+            </span>
+          </div>
+          
+          <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
+            <span className="text-sm text-gray-400">Direction</span>
+            <span className={`font-semibold text-sm ${
+              trade.direction === 'BUY' ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {trade.direction}
+            </span>
+          </div>
+          
+          <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
+            <span className="text-sm text-gray-400">Result</span>
+            <span className={`font-semibold text-sm ${
+              trade.resultValue > 0 ? 'text-green-400' : 
+              trade.resultValue < 0 ? 'text-red-400' : 'text-yellow-400'
+            }`}>
+              {trade.resultValue?.toFixed(2) || '0.00'}
+            </span>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-400">Risk Status</span>
+            {trade.riskAssessment && (
+              <span className={`font-semibold text-sm ${
+                trade.riskAssessment.isOutOfRisk ? 'text-red-400' : 'text-green-400'
+              }`}>
+                {trade.riskAssessment.isOutOfRisk ? 'Out of Risk' : 'Within Risk'}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Image Gallery */}
+        {trade.tradeImages && trade.tradeImages.length > 0 && (
+          <div className="pt-4 border-t border-[rgba(255,255,255,0.06)]">
+            <div className="flex items-center gap-2 mb-3">
+              <ImageIcon className="h-4 w-4 text-gray-400" />
+              <span className="text-sm text-gray-300">Trade Images</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {trade.tradeImages.map((image: string, index: number) => (
+                <img 
+                  key={index}
+                  src={image}
+                  alt={`Trade image ${index + 1}`}
+                  className="w-full h-20 object-cover rounded-lg"
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
 export function NewTrade() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -183,12 +415,12 @@ export function NewTrade() {
     strategyId: '',
     emotion: '',
     notes: '',
+    tradeImages: [],
   });
   const [riskAssessment, setRiskAssessment] = useState<RiskAssessment | null>(null);
   const [dailyRiskAlert, setDailyRiskAlert] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [validationError, setValidationError] = useState<string>('');
+  const [showSummary, setShowSummary] = useState(false);
 
   // Fetch user accounts with defensive defaults
   const { data: accounts = [], isLoading: accountsLoading } = useQuery<Account[]>({
@@ -275,7 +507,7 @@ export function NewTrade() {
     }
   };
 
-  const handleInputChange = (field: keyof TradeFormData, value: string | Date | File) => {
+  const handleInputChange = (field: keyof TradeFormData, value: string | Date | File[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     if (field === 'resultValue') {
@@ -283,21 +515,8 @@ export function NewTrade() {
     }
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-      handleInputChange('tradeImage', file);
-    }
-  };
-
-  const removeImage = () => {
-    setImagePreview(null);
-    handleInputChange('tradeImage', undefined as any);
+  const handleImageUpload = (images: File[]) => {
+    setFormData(prev => ({ ...prev, tradeImages: images }));
   };
 
   const createTradeMutation = useMutation({
@@ -390,7 +609,9 @@ export function NewTrade() {
         } : null,
       };
 
-      await createTradeMutation.mutateAsync(tradeData);
+      // Create trade and show summary
+      const createdTrade = await createTradeMutation.mutateAsync(tradeData);
+      setShowSummary(true);
     } catch (error) {
       console.error('Error creating trade:', error);
     } finally {
@@ -434,6 +655,10 @@ export function NewTrade() {
     return [outOfStrategy, ...(strategies || [])];
   };
 
+  // Get current strategy for summary
+  const currentStrategy = getStrategiesWithOutOfStrategy().find(s => s.id === formData.strategyId);
+  const currentAsset = assets.find(a => a.id === formData.assetId);
+
   return (
     <div className="min-h-screen bg-[#100E0F] text-white p-4">
       <div className="max-w-7xl mx-auto">
@@ -469,305 +694,337 @@ export function NewTrade() {
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-            {/* Left Column - Main Form */}
-            <div className="xl:col-span-3 space-y-8">
-              {/* Trade Direction Card */}
-              <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
-                <CardHeader className="pb-6">
-                  <CardTitle className="text-2xl font-semibold text-white flex items-center gap-3">
-                    <Target className="h-6 w-6 text-[#02AC73]" />
-                    Trade Direction
-                  </CardTitle>
-                  <CardDescription className="text-gray-400 text-base">
-                    Select your trade direction
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <DirectionToggle 
-                    direction={formData.direction} 
-                    setDirection={(dir) => handleInputChange('direction', dir)} 
-                  />
-                </CardContent>
-              </Card>
+        {showSummary ? (
+          <TradeSummaryCard 
+            trade={{
+              ...formData,
+              strategy: currentStrategy,
+              asset: currentAsset,
+              resultValue: parseFloat(formData.resultValue) || 0,
+              riskAssessment,
+            }}
+          />
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+              {/* Left Column - Main Form */}
+              <div className="xl:col-span-3 space-y-8">
+                {/* Trade Direction Card */}
+                <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
+                  <CardHeader className="pb-6">
+                    <CardTitle className="text-2xl font-semibold text-white flex items-center gap-3">
+                      <Target className="h-6 w-6 text-[#02AC73]" />
+                      Trade Direction
+                    </CardTitle>
+                    <CardDescription className="text-gray-400 text-base">
+                      Select your trade direction
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <DirectionToggle 
+                      direction={formData.direction} 
+                      setDirection={(dir) => handleInputChange('direction', dir)} 
+                    />
+                  </CardContent>
+                </Card>
 
-              {/* Trade Details Card */}
-              <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
-                <CardHeader className="pb-6">
-                  <CardTitle className="text-2xl font-semibold text-white flex items-center gap-3">
-                    <CalendarIcon className="h-6 w-6 text-[#02AC73]" />
-                    Trade Details
-                  </CardTitle>
-                  <CardDescription className="text-gray-400 text-base">
-                    Essential trade information
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Trade Date */}
-                  <div className="space-y-2">
-                    <Label htmlFor="tradeDate" className="text-sm font-medium text-gray-300">Trade Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#3A393B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200"
-                        >
-                          <CalendarIcon className="h-4 w-4 mr-3" />
-                          <span className="text-base">{format(formData.tradeDate, 'dd/MM/yyyy')}</span>
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
-                        <Calendar
-                          mode="single"
-                          selected={formData.tradeDate}
-                          onSelect={(date) => date && handleInputChange('tradeDate', date)}
-                          disabled={(date) => date > new Date()} // Block future dates
-                          initialFocus
-                          className="rounded-md bg-[#1A191B] text-white"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  {/* Account Selector */}
-                  <div className="space-y-2">
-                    <Label htmlFor="accountId" className="text-sm font-medium text-gray-300">Account</Label>
-                    <Select
-                      value={formData.accountId}
-                      onValueChange={(value) => handleInputChange('accountId', value)}
-                      disabled={accountsLoading}
-                    >
-                      <SelectTrigger className="bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#3A393B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
-                        <SelectValue placeholder="Select account" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
-                        {accounts.map((account) => (
-                          <SelectItem key={account.id} value={account.id} className="text-white hover:bg-[#1F1E20] rounded-lg">
-                            {account.accountName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Asset Grid */}
-                  <div className="space-y-2">
-                    <Label htmlFor="assetId" className="text-sm font-medium text-gray-300">Asset</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                      {assets.map((asset) => (
-                        <AssetCard
-                          key={asset.id}
-                          asset={asset}
-                          isSelected={formData.assetId === asset.id}
-                          onClick={() => handleInputChange('assetId', asset.id)}
-                          disabled={assetsLoading}
-                        />
-                      ))}
+                {/* Trade Details Card */}
+                <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
+                  <CardHeader className="pb-6">
+                    <CardTitle className="text-2xl font-semibold text-white flex items-center gap-3">
+                      <CalendarIcon className="h-6 w-6 text-[#02AC73]" />
+                      Trade Details
+                    </CardTitle>
+                    <CardDescription className="text-gray-400 text-base">
+                      Essential trade information
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Trade Date */}
+                    <div className="space-y-2">
+                      <Label htmlFor="tradeDate" className="text-sm font-medium text-gray-300">Trade Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#3A393B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200"
+                          >
+                            <CalendarIcon className="h-4 w-4 mr-3" />
+                            <span className="text-base">{format(formData.tradeDate, 'dd/MM/yyyy')}</span>
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
+                          <Calendar
+                            mode="single"
+                            selected={formData.tradeDate}
+                            onSelect={(date) => date && handleInputChange('tradeDate', date)}
+                            disabled={(date) => date > new Date()} // Block future dates
+                            initialFocus
+                            className="rounded-md bg-[#1A191B] text-white"
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
-                  </div>
 
-                  {/* Strategy Selector */}
-                  <div className="space-y-2">
-                    <Label htmlFor="strategyId" className="text-sm font-medium text-gray-300">Strategy</Label>
-                    <Select
-                      value={formData.strategyId}
-                      onValueChange={(value) => handleInputChange('strategyId', value)}
-                      disabled={strategiesLoading}
-                    >
-                      <SelectTrigger className="bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#3A393B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
-                        <SelectValue placeholder="Select strategy" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
-                        {getStrategiesWithOutOfStrategy().map((strategy) => (
-                          <SelectItem key={strategy.id} value={strategy.id} className="text-white hover:bg-[#1F1E20] rounded-lg">
-                            {strategy.strategyName}
-                          </SelectItem>
+                    {/* Account Selector */}
+                    <div className="space-y-2">
+                      <Label htmlFor="accountId" className="text-sm font-medium text-gray-300">Account</Label>
+                      <Select
+                        value={formData.accountId}
+                        onValueChange={(value) => handleInputChange('accountId', value)}
+                        disabled={accountsLoading}
+                      >
+                        <SelectTrigger className="bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#3A393B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
+                          <SelectValue placeholder="Select account" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
+                          {accounts.map((account) => (
+                            <SelectItem key={account.id} value={account.id} className="text-white hover:bg-[#1F1E20] rounded-lg">
+                              {account.accountName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Asset Grid */}
+                    <div className="space-y-2">
+                      <Label htmlFor="assetId" className="text-sm font-medium text-gray-300">Asset</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                        {assets.map((asset) => (
+                          <AssetCard
+                            key={asset.id}
+                            asset={asset}
+                            isSelected={formData.assetId === asset.id}
+                            onClick={() => handleInputChange('assetId', asset.id)}
+                            disabled={assetsLoading}
+                          />
                         ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Result Input with Status */}
-                  <div className="space-y-2">
-                    <Label htmlFor="resultValue" className="text-sm font-medium text-gray-300">
-                      Result (P&L)
-                    </Label>
-                    <div className="flex gap-3 items-end">
-                      <div className="flex-1">
-                        <Input
-                          id="resultValue"
-                          type="number"
-                          value={formData.resultValue}
-                          onChange={(e) => handleInputChange('resultValue', e.target.value)}
-                          placeholder="0.00"
-                          className="bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white placeholder-gray-500 rounded-xl px-4 py-3 focus:border-[#02AC73] focus:shadow-[0_0_0_3px_rgba(2,172,115,0.15)] transition-all duration-200"
-                        />
                       </div>
-                      {formData.resultValue && (
-                        <div className="transition-all duration-200">
-                          {getRiskStatus() && <RiskStatusChip status={getRiskStatus() as any} />}
-                        </div>
-                      )}
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-500">Result:</span>
-                      <span className={`text-xl font-bold transition-colors duration-200 ${getResultColor()}`}>
-                        {formData.resultValue ? parseFloat(formData.resultValue).toFixed(2) : '0.00'}
-                      </span>
+
+                    {/* Strategy Selector */}
+                    <div className="space-y-2">
+                      <Label htmlFor="strategyId" className="text-sm font-medium text-gray-300">Strategy</Label>
+                      <Select
+                        value={formData.strategyId}
+                        onValueChange={(value) => handleInputChange('strategyId', value)}
+                        disabled={strategiesLoading}
+                      >
+                        <SelectTrigger className="bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#3A393B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
+                          <SelectValue placeholder="Select strategy" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
+                          {getStrategiesWithOutOfStrategy().map((strategy) => (
+                            <StrategyItem
+                              key={strategy.id}
+                              strategy={strategy}
+                              isSelected={formData.strategyId === strategy.id}
+                              onClick={() => handleInputChange('strategyId', strategy.id)}
+                              disabled={strategiesLoading}
+                            />
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  </div>
 
-                  {/* Emotion Selector */}
-                  <div className="space-y-2">
-                    <Label htmlFor="emotion" className="text-sm font-medium text-gray-300">Emotion</Label>
-                    <Select
-                      value={formData.emotion}
-                      onValueChange={(value) => handleInputChange('emotion', value)}
-                    >
-                      <SelectTrigger className="bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#3A393B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
-                        <SelectValue placeholder="Select emotion" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
-                        {emotionOptions.map((emotion) => (
-                          <SelectItem key={emotion} value={emotion} className="text-white hover:bg-[#1F1E20] rounded-lg">
-                            <div className="flex items-center gap-2">
-                              <Smile className="h-4 w-4" />
-                              {emotion}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Notes Card */}
-              <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
-                <CardHeader className="pb-6">
-                  <CardTitle className="text-2xl font-semibold text-white flex items-center gap-3">
-                    <Brain className="h-6 w-6 text-[#02AC73]" />
-                    Trade Analysis
-                  </CardTitle>
-                  <CardDescription className="text-gray-400 text-base">
-                    Document your trade insights
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Textarea
-                    id="notes"
-                    value={formData.notes}
-                    onChange={(e) => handleInputChange('notes', e.target.value)}
-                    placeholder="What worked? What failed? What can be improved?"
-                    className="bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white placeholder-gray-500 resize-none rounded-xl px-4 py-3 focus:border-[#02AC73] focus:shadow-[0_0_0_3px_rgba(2,172,115,0.15)] transition-all duration-200"
-                    rows={4}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Right Column - Risk Panel */}
-            <div className="xl:col-span-1 space-y-6">
-              {/* Risk Assessment Card */}
-              <Card className={`bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl transition-all duration-300 ${getRiskGlow()}`}>
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl font-semibold text-white flex items-center gap-2">
-                    <Target className="h-5 w-5 text-[#02AC73]" />
-                    Risk Assessment
-                  </CardTitle>
-                  <CardDescription className="text-gray-400 text-sm">
-                    Real-time risk analysis
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {riskAssessment && accounts.length > 0 ? (
-                    <>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
-                          <span className="text-sm text-gray-400">Stop per Trade</span>
-                          <span className="text-white font-semibold">
-                            {riskAssessment.stopLossPerTrade.toFixed(2)}
-                            <span className="text-xs text-gray-500 ml-1">USD</span>
-                          </span>
+                    {/* Result Input with Status */}
+                    <div className="space-y-2">
+                      <Label htmlFor="resultValue" className="text-sm font-medium text-gray-300">
+                        Result (P&L)
+                      </Label>
+                      <div className="flex gap-3 items-end">
+                        <div className="flex-1">
+                          <Input
+                            id="resultValue"
+                            type="number"
+                            value={formData.resultValue}
+                            onChange={(e) => handleInputChange('resultValue', e.target.value)}
+                            placeholder="0.00"
+                            className="bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white placeholder-gray-500 rounded-xl px-4 py-3 focus:border-[#02AC73] focus:shadow-[0_0_0_3px_rgba(2,172,115,0.15)] transition-all duration-200"
+                          />
                         </div>
-                        <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
-                          <span className="text-sm text-gray-400">Daily Stop</span>
-                          <span className="text-white font-semibold">
-                            {riskAssessment.dailyStopLimit.toFixed(2)}
-                            <span className="text-xs text-gray-500 ml-1">USD</span>
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
-                          <span className="text-sm text-gray-400">Trade Result</span>
-                          <span className={`font-semibold transition-colors duration-200 ${
-                            formData.resultValue ? 
-                              (parseFloat(formData.resultValue) > 0 ? 'text-green-400' : 
-                               parseFloat(formData.resultValue) < 0 ? 'text-red-400' : 'text-yellow-400') : 
-                              'text-gray-400'
-                          }`}>
-                            {formData.resultValue ? parseFloat(formData.resultValue).toFixed(2) : '0.00'}
-                            <span className="text-xs text-gray-500 ml-1">USD</span>
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-400">Risk Status</span>
-                          <span className={`font-semibold text-sm ${
-                            riskAssessment.isOutOfRisk ? 'text-red-400' : 'text-green-400'
-                          }`}>
-                            {riskAssessment.isOutOfRisk ? 'Out of Risk' : 'Within Risk'}
-                          </span>
-                        </div>
+                        {formData.resultValue && (
+                          <div className="transition-all duration-200">
+                            {getRiskStatus() && <RiskStatusChip status={getRiskStatus() as any} />}
+                          </div>
+                        )}
                       </div>
-                    </>
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="text-gray-500 text-sm">Select an account to view risk assessment</div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-500">Result:</span>
+                        <span className={`text-xl font-bold transition-colors duration-200 ${getResultColor()}`}>
+                          {formData.resultValue ? parseFloat(formData.resultValue).toFixed(2) : '0.00'}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
 
-              {/* Daily Risk Alert */}
-              {dailyRiskAlert && (
-                <Alert className="bg-[#1F1E20] border-[rgba(245,197,66,0.3)] text-yellow-100 rounded-xl">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription className="text-sm">{dailyRiskAlert}</AlertDescription>
-                </Alert>
-              )}
+                    {/* Emotion Selector */}
+                    <div className="space-y-2">
+                      <Label htmlFor="emotion" className="text-sm font-medium text-gray-300">Emotion</Label>
+                      <Select
+                        value={formData.emotion}
+                        onValueChange={(value) => handleInputChange('emotion', value)}
+                      >
+                        <SelectTrigger className="bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#3A393B] hover:border-[#02AC73]/50 rounded-xl px-4 py-3 transition-all duration-200">
+                          <SelectValue placeholder="Select emotion" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-xl">
+                          {emotionOptions.map((emotion) => (
+                            <SelectItem key={emotion} value={emotion} className="text-white hover:bg-[#1F1E20] rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <Smile className="h-4 w-4" />
+                                {emotion}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              {/* Action Buttons */}
-              <div className="space-y-3">
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-[#02AC73] to-[#02AC73]/80 hover:from-[#02AC73] hover:to-[#02AC73] text-white font-semibold rounded-xl px-8 py-4 text-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(2,172,115,0.3)] hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                      Saving...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Save className="h-5 w-5" />
-                      Save Trade
-                    </div>
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate('/dashboard')}
-                  className="w-full bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#3A393B] hover:border-[#02AC73]/50 rounded-xl px-8 py-4 text-lg font-semibold transition-all duration-200"
-                >
-                  Cancel
-                </Button>
+                {/* Image Upload Card */}
+                <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
+                  <CardHeader className="pb-6">
+                    <CardTitle className="text-2xl font-semibold text-white flex items-center gap-3">
+                      <ImageIcon className="h-6 w-6 text-[#02AC73]" />
+                      Trade Images
+                    </CardTitle>
+                    <CardDescription className="text-gray-400 text-base">
+                      Upload screenshots or charts related to this trade
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ImageUpload onImagesChange={handleImageUpload} />
+                  </CardContent>
+                </Card>
+
+                {/* Notes Card */}
+                <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
+                  <CardHeader className="pb-6">
+                    <CardTitle className="text-2xl font-semibold text-white flex items-center gap-3">
+                      <Brain className="h-6 w-6 text-[#02AC73]" />
+                      Trade Analysis
+                    </CardTitle>
+                    <CardDescription className="text-gray-400 text-base">
+                      Document your trade insights
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Textarea
+                      id="notes"
+                      value={formData.notes}
+                      onChange={(e) => handleInputChange('notes', e.target.value)}
+                      placeholder="What worked? What failed? What can be improved?"
+                      className="bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white placeholder-gray-500 resize-none rounded-xl px-4 py-3 focus:border-[#02AC73] focus:shadow-[0_0_0_3px_rgba(2,172,115,0.15)] transition-all duration-200"
+                      rows={4}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Column - Risk Panel */}
+              <div className="xl:col-span-1 space-y-6">
+                {/* Risk Assessment Card */}
+                <Card className={`bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl transition-all duration-300 ${getRiskGlow()}`}>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-xl font-semibold text-white flex items-center gap-2">
+                      <Target className="h-5 w-5 text-[#02AC73]" />
+                      Risk Assessment
+                    </CardTitle>
+                    <CardDescription className="text-gray-400 text-sm">
+                      Real-time risk analysis
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {riskAssessment && accounts.length > 0 ? (
+                      <>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
+                            <span className="text-sm text-gray-400">Stop per Trade</span>
+                            <span className="text-white font-semibold">
+                              {riskAssessment.stopLossPerTrade.toFixed(2)}
+                              <span className="text-xs text-gray-500 ml-1">USD</span>
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
+                            <span className="text-sm text-gray-400">Daily Stop</span>
+                            <span className="text-white font-semibold">
+                              {riskAssessment.dailyStopLimit.toFixed(2)}
+                              <span className="text-xs text-gray-500 ml-1">USD</span>
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center pb-2 border-b border-[rgba(255,255,255,0.06)]">
+                            <span className="text-sm text-gray-400">Trade Result</span>
+                            <span className={`font-semibold transition-colors duration-200 ${
+                              formData.resultValue ? 
+                                (parseFloat(formData.resultValue) > 0 ? 'text-green-400' : 
+                                 parseFloat(formData.resultValue) < 0 ? 'text-red-400' : 'text-yellow-400') : 
+                                'text-gray-400'
+                            }`}>
+                              {formData.resultValue ? parseFloat(formData.resultValue).toFixed(2) : '0.00'}
+                              <span className="text-xs text-gray-500 ml-1">USD</span>
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-400">Risk Status</span>
+                            <span className={`font-semibold text-sm ${
+                              riskAssessment.isOutOfRisk ? 'text-red-400' : 'text-green-400'
+                            }`}>
+                              {riskAssessment.isOutOfRisk ? 'Out of Risk' : 'Within Risk'}
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="text-gray-500 text-sm">Select an account to view risk assessment</div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Daily Risk Alert */}
+                {dailyRiskAlert && (
+                  <Alert className="bg-[#1F1E20] border-[rgba(245,197,66,0.3)] text-yellow-100 rounded-xl">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription className="text-sm">{dailyRiskAlert}</AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-gradient-to-r from-[#02AC73] to-[#02AC73]/80 hover:from-[#02AC73] hover:to-[#02AC73] text-white font-semibold rounded-xl px-8 py-4 text-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(2,172,115,0.3)] hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                        Saving...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Save className="h-5 w-5" />
+                        Save Trade
+                      </div>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate('/dashboard')}
+                    className="w-full bg-[#2A292B] border-[rgba(255,255,255,0.06)] text-white hover:bg-[#3A393B] hover:border-[#02AC73]/50 rounded-xl px-8 py-4 text-lg font-semibold transition-all duration-200"
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        </form>
+          </form>
+        )}
       </div>
     </div>
   );
