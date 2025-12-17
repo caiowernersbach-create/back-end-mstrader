@@ -154,14 +154,14 @@ export function MonthlyCalendar({ dailyData, currentDate, onMonthChange }: Month
         </div>
 
         {hoveredDay && (
-          <div className="absolute bg-[#1A191B] border border-[rgba(255,255,255,0.2)] rounded-lg p-3 shadow-xl z-10 backdrop-blur-sm mt-2">
-            <div className="text-sm font-medium text-white mb-1">
+          <div className="absolute bg-[#1A191B] border border-[rgba(255,255,255,0.3)] rounded-lg p-3 shadow-xl z-10 backdrop-blur-sm mt-2">
+            <div className="text-sm font-bold text-white mb-1">
               {new Date(hoveredDay.date).toLocaleDateString()}
             </div>
             <div className="flex items-center gap-2 text-xs">
               <Badge 
                 variant={hoveredDay.dailyResult > 0 ? 'default' : hoveredDay.dailyResult < 0 ? 'destructive' : 'secondary'}
-                className="text-xs"
+                className="text-xs font-semibold"
               >
                 {hoveredDay.dailyResult.toFixed(2)}
               </Badge>
@@ -170,7 +170,7 @@ export function MonthlyCalendar({ dailyData, currentDate, onMonthChange }: Month
               </span>
             </div>
             {hoveredDay.isOutOfRisk && (
-              <div className="flex items-center gap-2 text-xs mt-1 text-red-400">
+              <div className="flex items-center gap-2 text-xs mt-1 text-red-400 font-semibold">
                 <AlertTriangle className="h-3 w-3" />
                 <span>Day out of risk</span>
               </div>

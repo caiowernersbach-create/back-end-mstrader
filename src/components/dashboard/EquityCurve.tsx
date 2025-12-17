@@ -34,7 +34,7 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
   if (!dailyData || dailyData.length === 0) {
     return (
       <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl h-[420px]">
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle className="text-xl font-semibold text-white flex items-center gap-3">
             <TrendingUp className="h-5 w-5 text-[#02AC73]" />
             Equity Curve
@@ -94,7 +94,7 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
 
   return (
     <Card className="bg-[#1A191B] border-[rgba(255,255,255,0.06)] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 h-[420px]">
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle className="text-xl font-semibold text-white flex items-center gap-3">
           <TrendingUp className="h-5 w-5 text-[#02AC73]" />
           Equity Curve
@@ -103,13 +103,13 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
           Monthly equity progression
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-[calc(100%-80px)]">
+      <CardContent className="h-[calc(100%-80px)] p-4">
         <div className="relative h-full">
           <svg width="100%" height="100%" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
             <defs>
               <linearGradient id="equityGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#02AC73" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="#02AC73" stopOpacity="0.05" />
+                <stop offset="0%" stopColor="#02AC73" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#02AC73" stopOpacity="0.1" />
               </linearGradient>
             </defs>
             
@@ -117,7 +117,7 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
               <path
                 d={generateAreaPath()}
                 fill="url(#equityGradient)"
-                opacity={animationProgress * 0.6}
+                opacity={animationProgress * 0.8}
               />
             )}
             
@@ -125,7 +125,7 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
               <path
                 d={generatePath()}
                 stroke="#02AC73"
-                strokeWidth="2"
+                strokeWidth="3"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -145,11 +145,11 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
                   key={index}
                   cx={x}
                   cy={y}
-                  r="4"
+                  r="5"
                   fill={getPointColor(point.dailyResult)}
                   stroke="#100E0F"
                   strokeWidth="2"
-                  className="cursor-pointer transition-all duration-200 hover:r-6"
+                  className="cursor-pointer transition-all duration-200 hover:r-7"
                   onMouseEnter={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
                     setHoveredPoint({
@@ -166,30 +166,31 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
           
           {hoveredPoint && (
             <div 
-              className="absolute bg-[#1A191B] border border-[rgba(255,255,255,0.2)] rounded-lg p-3 shadow-xl z-10 backdrop-blur-sm"
+              className="absolute bg-[#1A191B] border border-[rgba(255,255,255,0.3)] rounded-lg p-4 shadow-xl z-10 backdrop-blur-sm"
               style={{
                 left: hoveredPoint.x,
-                top: hoveredPoint.y - 80,
+                top: hoveredPoint.y - 100,
                 transform: 'translate(-50%, -100%)',
+                minWidth: '200px'
               }}
             >
-              <div className="text-sm font-medium text-white mb-1">
+              <div className="text-base font-bold text-white mb-2">
                 {new Date(hoveredPoint.date).toLocaleDateString()}
               </div>
-              <div className="flex items-center gap-2 text-xs">
-                <DollarSign className="h-3 w-3" />
-                <span className="text-white font-semibold">
+              <div className="flex items-center gap-2 text-sm mb-2">
+                <DollarSign className="h-4 w-4 text-[#02AC73]" />
+                <span className="text-lg font-bold text-white">
                   {hoveredPoint.equity.toFixed(2)}
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-xs mt-1">
+              <div className="flex items-center gap-2">
                 <Badge 
                   variant={hoveredPoint.dailyResult > 0 ? 'default' : hoveredPoint.dailyResult < 0 ? 'destructive' : 'secondary'}
-                  className="text-xs"
+                  className="text-sm font-semibold"
                 >
                   {hoveredPoint.dailyResult.toFixed(2)}
                 </Badge>
-                <span className="text-gray-400">
+                <span className="text-sm text-gray-400">
                   {hoveredPoint.tradesCount} trades
                 </span>
               </div>
@@ -199,20 +200,20 @@ export function EquityCurve({ dailyData }: EquityCurveProps) {
         
         <div className="flex justify-between mt-4 pt-4 border-t border-[rgba(255,255,255,0.06)]">
           <div className="text-center">
-            <div className="text-sm text-gray-400">Start</div>
-            <div className="text-lg font-semibold text-white">
+            <div className="text-xs text-gray-500 uppercase tracking-wider">Start</div>
+            <div className="text-lg font-bold text-white">
               {dailyData[0]?.equity.toFixed(2) || '0.00'}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-sm text-gray-400">End</div>
-            <div className="text-lg font-semibold text-white">
+            <div className="text-xs text-gray-500 uppercase tracking-wider">End</div>
+            <div className="text-lg font-bold text-white">
               {dailyData[dailyData.length - 1]?.equity.toFixed(2) || '0.00'}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-sm text-gray-400">Change</div>
-            <div className={`text-lg font-semibold ${
+            <div className="text-xs text-gray-500 uppercase tracking-wider">Change</div>
+            <div className={`text-lg font-bold ${
               (dailyData[dailyData.length - 1]?.equity || 0) - (dailyData[0]?.equity || 0) >= 0 
                 ? 'text-[#02AC73]' 
                 : 'text-red-400'

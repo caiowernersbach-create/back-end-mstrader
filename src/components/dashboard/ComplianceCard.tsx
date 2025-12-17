@@ -95,7 +95,7 @@ export function ComplianceCard({
       </CardHeader>
       <CardContent className="h-[calc(100%-80px)] overflow-y-auto">
         {complianceItems.map((item, index) => (
-          <div key={index} className="space-y-2">
+          <div key={index} className="space-y-3 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <item.icon className="h-4 w-4 text-gray-400" />
@@ -103,15 +103,14 @@ export function ComplianceCard({
                   {item.title}
                 </span>
               </div>
-              <span className={`text-sm font-semibold ${getComplianceColor(item.value)}`}>
+              <span className={`text-xl font-bold ${getComplianceColor(item.value)}`}>
                 {item.value}%
               </span>
             </div>
             <Progress 
               value={item.value} 
-              className="h-2 bg-[#2A292B]"
+              className="h-3 bg-[#2A292B]"
             />
-            <p className="text-xs text-gray-500">{item.description}</p>
           </div>
         ))}
 
@@ -122,12 +121,12 @@ export function ComplianceCard({
               <span className="text-sm font-medium text-gray-300">Consistency Streak</span>
             </div>
             <div className={`flex items-center gap-2 ${isStreakActive ? 'animate-pulse' : ''}`}>
-              <span className={`text-lg font-bold ${isStreakActive ? 'text-[#02AC73]' : 'text-gray-400'}`}>
+              <span className={`text-2xl font-bold ${isStreakActive ? 'text-[#02AC73]' : 'text-gray-400'}`}>
                 {consistencyStreak}
               </span>
               <span className="text-xs text-gray-500">days</span>
               {isStreakActive && (
-                <span className="text-xs text-[#02AC73]">🔥 Active</span>
+                <span className="text-xs text-[#02AC73] font-semibold">🔥 Active</span>
               )}
             </div>
           </div>

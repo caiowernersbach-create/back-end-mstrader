@@ -15,6 +15,12 @@ import { RecentTrades } from '../components/dashboard/RecentTrades';
 export function Dashboard() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Entrance animation
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
 
   // Fetch all trades
   const { data: allTrades = [], isLoading: tradesLoading } = useQuery<Trade[]>({
@@ -63,7 +69,7 @@ export function Dashboard() {
     <div className="min-h-screen bg-[#100E0F] text-white p-4">
       <div className="max-w-7xl mx-auto">
         {/* HEADER */}
-        <div className="w-full mb-12">
+        <div className={`w-full mb-12 transition-all duration-700 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-[#02AC73] to-[#02AC73]/60 bg-clip-text text-transparent">
@@ -89,7 +95,7 @@ export function Dashboard() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleMonthChange('prev')}
-                className="text-gray-400 hover:text-white hover:bg-[#1F1E20] rounded-lg p-2"
+                className="text-gray-400 hover:text-white hover:bg-[#1F1E20] rounded-lg p-2 transition-all duration-200"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -102,7 +108,7 @@ export function Dashboard() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleMonthChange('next')}
-                className="text-gray-400 hover:text-white hover:bg-[#1F1E20] rounded-lg p-2"
+                className="text-gray-400 hover:text-white hover:bg-[#1F1E20] rounded-lg p-2 transition-all duration-200"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -113,7 +119,7 @@ export function Dashboard() {
         </div>
 
         {/* KPI SECTION */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
+        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12 transition-all duration-700 delay-100 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
           <MonthlyKPIs
             netResult={monthlyMetrics.netResult}
             winRate={monthlyMetrics.winRate}
@@ -125,7 +131,7 @@ export function Dashboard() {
         </div>
 
         {/* MAIN GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 transition-all duration-700 delay-200 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
           {/* Equity Curve - Span 2 columns */}
           <div className="lg:col-span-2">
             <EquityCurve dailyData={monthlyMetrics.equityCurve} />
@@ -144,7 +150,7 @@ export function Dashboard() {
         </div>
 
         {/* SECOND ROW (still main grid) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 transition-all duration-700 delay-300 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
           {/* Calendar - Span 2 columns */}
           <div className="lg:col-span-2">
             <MonthlyCalendar
@@ -161,7 +167,7 @@ export function Dashboard() {
         </div>
 
         {/* BOTTOM GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-8 transition-all duration-700 delay-400 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
           {/* Recent Trades - Span 2 columns */}
           <div className="lg:col-span-2">
             <RecentTrades

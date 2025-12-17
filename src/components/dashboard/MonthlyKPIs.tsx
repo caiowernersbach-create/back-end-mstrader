@@ -78,88 +78,76 @@ export function MonthlyKPIs({
     transition-all 
     duration-300 
     hover:scale-[1.01] 
-    h-full
+    h-[100px]
+    overflow-hidden
   `;
+
+  const getGlowClass = (value: number, type: 'net' | 'win' | 'factor') => {
+    if (type === 'net' && value > 0) return 'shadow-[0_0_20px_rgba(2,172,115,0.3)]';
+    if (type === 'win' && value >= 50) return 'shadow-[0_0_20px_rgba(2,172,115,0.3)]';
+    if (type === 'factor' && value >= 1.5) return 'shadow-[0_0_20px_rgba(2,172,115,0.3)]';
+    return '';
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
       {/* Net Result */}
-      <Card className={getKPIClass('net')}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-400">Net Result</CardTitle>
-          <DollarSign className="h-4 w-4 text-[#02AC73]" />
-        </CardHeader>
-        <CardContent>
-          <div className={`text-2xl font-bold ${getKPIColor(netResult, 'net')}`}>
+      <Card className={`${getKPIClass('net')} ${getGlowClass(netResult, 'net')}`}>
+        <CardContent className="p-4 h-full flex flex-col justify-center">
+          <div className={`text-3xl font-bold ${getKPIColor(netResult, 'net')} transition-all duration-300`}>
             {animatedValues.netResult.toFixed(2)}
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            {netResult > 0 ? 'Profitable' : netResult < 0 ? 'Loss' : 'Breakeven'}
-          </p>
+          <div className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">
+            Net Result
+          </div>
         </CardContent>
       </Card>
 
       {/* Win Rate */}
-      <Card className={getKPIClass('win')}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-400">Win Rate</CardTitle>
-          <Target className="h-4 w-4 text-[#02AC73]" />
-        </CardHeader>
-        <CardContent>
-          <div className={`text-2xl font-bold ${getKPIColor(winRate, 'win')}`}>
+      <Card className={`${getKPIClass('win')} ${getGlowClass(winRate, 'win')}`}>
+        <CardContent className="p-4 h-full flex flex-col justify-center">
+          <div className={`text-3xl font-bold ${getKPIColor(winRate, 'win')} transition-all duration-300`}>
             {animatedValues.winRate.toFixed(1)}%
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            {winRate >= 50 ? 'Excellent' : winRate >= 30 ? 'Good' : 'Needs work'}
-          </p>
+          <div className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">
+            Win Rate
+          </div>
         </CardContent>
       </Card>
 
       {/* Profit Factor */}
-      <Card className={getKPIClass('factor')}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-400">Profit Factor</CardTitle>
-          <TrendingUp className="h-4 w-4 text-[#02AC73]" />
-        </CardHeader>
-        <CardContent>
-          <div className={`text-2xl font-bold ${getKPIColor(profitFactor, 'factor')}`}>
+      <Card className={`${getKPIClass('factor')} ${getGlowClass(profitFactor, 'factor')}`}>
+        <CardContent className="p-4 h-full flex flex-col justify-center">
+          <div className={`text-3xl font-bold ${getKPIColor(profitFactor, 'factor')} transition-all duration-300`}>
             {animatedValues.profitFactor.toFixed(2)}
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            {profitFactor >= 1.5 ? 'Strong' : profitFactor >= 1.0 ? 'Positive' : 'Negative'}
-          </p>
+          <div className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">
+            Profit Factor
+          </div>
         </CardContent>
       </Card>
 
       {/* Total Trades */}
       <Card className={getKPIClass('trades')}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-400">Total Trades</CardTitle>
-          <Calendar className="h-4 w-4 text-[#02AC73]" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-white">
+        <CardContent className="p-4 h-full flex flex-col justify-center">
+          <div className="text-3xl font-bold text-white transition-all duration-300">
             {animatedValues.totalTrades}
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            {totalTrades > 20 ? 'Active' : totalTrades > 10 ? 'Moderate' : 'Light'}
-          </p>
+          <div className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">
+            Total Trades
+          </div>
         </CardContent>
       </Card>
 
       {/* Consistency Streak */}
       <Card className={getKPIClass('streak')}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-400">Consistency</CardTitle>
-          <Zap className="h-4 w-4 text-[#02AC73]" />
-        </CardHeader>
-        <CardContent>
-          <div className={`text-2xl font-bold ${getKPIColor(consistencyStreak, 'streak')}`}>
+        <CardContent className="p-4 h-full flex flex-col justify-center">
+          <div className={`text-3xl font-bold ${getKPIColor(consistencyStreak, 'streak')} transition-all duration-300`}>
             {animatedValues.consistencyStreak}
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            {isStreakActive ? '🔥 Active' : '⏸️ Broken'}
-          </p>
+          <div className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">
+            Consistency
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -53,16 +53,16 @@ export function RecentTrades({ trades, onTradeClick }: RecentTradesProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="h-[calc(100%-80px)] overflow-y-auto">
-        <div className="space-y-3">
+        <div className="space-y-2">
           {displayTrades.map((trade) => (
             <div 
               key={trade.id} 
-              className="group p-4 bg-[#2A292B] rounded-xl hover:bg-[#3A393B] transition-all duration-200 cursor-pointer border border-transparent hover:border-[rgba(2,172,115,0.2)]"
+              className="group p-3 bg-[#2A292B] rounded-lg hover:bg-[#3A393B] transition-all duration-200 cursor-pointer border border-transparent hover:border-[rgba(2,172,115,0.3)] hover:shadow-[0_0_10px_rgba(2,172,115,0.2)]"
               onClick={() => onTradeClick?.(trade.id)}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                <div className="flex items-center gap-3">
+                  <div className={`flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
                     trade.direction === 'BUY' 
                       ? 'bg-[#02AC73]/10 text-[#02AC73] border border-[#02AC73]/30' 
                       : 'bg-red-500/10 text-red-400 border border-red-500/30'
@@ -72,7 +72,7 @@ export function RecentTrades({ trades, onTradeClick }: RecentTradesProps) {
                   </div>
                   
                   <div>
-                    <div className="text-sm font-medium text-white">
+                    <div className="text-sm font-bold text-white">
                       {trade.asset?.assetSymbol}
                     </div>
                     <div className="text-xs text-gray-500">
@@ -81,20 +81,20 @@ export function RecentTrades({ trades, onTradeClick }: RecentTradesProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <div className={`text-lg font-semibold transition-colors duration-200 ${getResultColor(trade.resultValue)}`}>
+                <div className="flex items-center gap-3">
+                  <div className={`text-xl font-bold transition-colors duration-200 ${getResultColor(trade.resultValue)}`}>
                     {trade.resultValue.toFixed(2)}
                   </div>
 
                   <Badge 
                     variant="outline" 
-                    className={`text-xs ${getStrategyColor(trade.strategy.strategyName, trade.strategy.isOutOfStrategy)}`}
+                    className={`text-xs font-semibold ${getStrategyColor(trade.strategy.strategyName, trade.strategy.isOutOfStrategy)}`}
                   >
                     {trade.strategy.strategyName}
                   </Badge>
 
                   {trade.isOutOfRisk && (
-                    <div className="flex items-center gap-1 text-xs text-red-400">
+                    <div className="flex items-center gap-1 text-xs text-red-400 font-semibold">
                       <Minus className="h-3 w-3" />
                       <span>Risk</span>
                     </div>
