@@ -1,16 +1,8 @@
-export type Strategy = {
-  id: string;
-  strategyName: string;
-};
-
-const mockStrategies: Strategy[] = [
-  { id: "str-1", strategyName: "Breakout London" },
-  { id: "str-2", strategyName: "NY Reversal" },
-  { id: "str-3", strategyName: "Trend Continuation" }
-];
+import { strategiesMock } from "@/mocks/strategies.mock";
+import { Strategy } from "@/types/strategy";
 
 export const strategyService = {
-  async getUserStrategies(): Promise<Strategy[]> {
-    return Promise.resolve(mockStrategies);
+  async getAll(): Promise<Strategy[]> {
+    return Promise.resolve(strategiesMock);
   }
 };

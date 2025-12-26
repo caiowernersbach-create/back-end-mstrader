@@ -1,5 +1,4 @@
-// Services index file
-export { tradeService } from './trade.service';
-export { accountService } from './account.service';
-export { assetService } from './asset.service';
-export { strategyService } from './strategy.service';
+export * from "./trade.service";
+export * from "./strategy.service";
+export * from "./account.service";
+export * from "./asset.service";

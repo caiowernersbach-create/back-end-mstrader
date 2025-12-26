@@ -1,18 +1,5 @@
-export type Asset = {
-  id: string;
-  assetSymbol: string;
-};
-
-const mockAssets: Asset[] = [
-  { id: "asset-1", assetSymbol: "EURUSD" },
-  { id: "asset-2", assetSymbol: "GBPUSD" },
-  { id: "asset-3", assetSymbol: "USDJPY" },
-  { id: "asset-4", assetSymbol: "AUDUSD" },
-  { id: "asset-5", assetSymbol: "USDCAD" }
-];
-
 export const assetService = {
-  async getUserAssets(): Promise<Asset[]> {
-    return Promise.resolve(mockAssets);
+  async getAll(): Promise<string[]> {
+    return Promise.resolve(["NQ", "ES", "CL", "GC"]);
   }
 };
